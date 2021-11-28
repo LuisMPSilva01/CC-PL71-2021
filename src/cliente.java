@@ -12,6 +12,7 @@ public class cliente {
             System.out.println("Format: FCliente ficheiro");
             return;
         }
+
         Logger logger = Logger.getLogger("MyLog");
         FileHandler fh = null;
 

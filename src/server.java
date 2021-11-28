@@ -29,7 +29,7 @@ public class server {
         }
 
         try {
-            out = new FileOutputStream("C:\\Users\\Acer\\Desktop\\teste2.txt");
+            out = new FileOutputStream("C:\\Users\\Acer\\Desktop\\teste.zip");
         } catch (FileNotFoundException ex) {
             System.out.println("File not found. ");
         }
