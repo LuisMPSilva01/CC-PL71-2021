@@ -7,7 +7,7 @@ public class EchoClient {
 
     public EchoClient() throws SocketException, UnknownHostException {
         socket = new DatagramSocket();
-        address = InetAddress.getByName("192.168.56.1");
+        address = InetAddress.getByName("localhost");
     }
 
     public void sendEcho(String msg) throws IOException {
