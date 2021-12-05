@@ -10,4 +10,7 @@ public class ACK extends Pacote{
         byte[] blocos = ByteBuffer.allocate(4).putInt(nBloco).array();
         System.arraycopy(blocos, 0, bytes, 1, 4); //Copiar o número do bloco
     }
+    public ACK(byte[] bytes) {
+        super(bytes);
+    }
 }

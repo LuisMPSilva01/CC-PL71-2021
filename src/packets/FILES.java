@@ -9,6 +9,9 @@ import java.util.List;
 import java.util.Map;
 
 public class FILES extends Pacote{
+    public FILES(byte[] bytes) {
+        super(bytes);
+    }
     public FILES(int bloco,int nblocos,String fileName,long fileSize) {
         super(1+4+4+fileName.length()+1+8+1);
         bytes[0] = 6;

@@ -15,6 +15,9 @@ public class Pacote {
     public Pacote(int size) {
         bytes = new byte[size];
     }
+    public Pacote(byte[] bytes) {
+        this.bytes = bytes.clone();
+    }
 
     public String toString(){
         return Arrays.toString(bytes);
@@ -46,5 +49,11 @@ public class Pacote {
 
     public String bytesToString(byte[] bytes, int offset, int length) throws IOException {
         return new String(bytes, offset, length, StandardCharsets.UTF_8);
+    }
+    public boolean isFIN(){
+        return bytes[0]==7;
+    }
+    public boolean isWRQFile(){
+        return bytes[0]==3;
     }
 }

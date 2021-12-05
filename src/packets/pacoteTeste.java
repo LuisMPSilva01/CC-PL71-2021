@@ -5,7 +5,7 @@ import java.util.Arrays;
 
 public class pacoteTeste {
     public static void main(String[] args) {
-        ACK teste = new ACK(1);
-        System.out.println(teste);
+        RRQFile teste = new RRQFile("ARROZ");
+        System.out.println(teste.getFileName());
     }
 }

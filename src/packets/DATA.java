@@ -12,4 +12,7 @@ public class DATA extends Pacote{
 
         System.arraycopy(data, 0, bytes, 5, data.length); //Copiar a data (possivelmente isto pode ser melhorado)
     }
+    public DATA(byte[] bytes) {
+        super(bytes);
+    }
 }

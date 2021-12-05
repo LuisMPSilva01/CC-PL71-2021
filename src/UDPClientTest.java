@@ -73,6 +73,8 @@ public class UDPClientTest {
 
         FILES f = new FILES(m);
         System.out.println(f);
+
+        client.sendPacket(f);
         //File test = new File("/home/ray/Downloads/testes/server.c");
         //byte[] fileContent = Files.readAllBytes(test.toPath());
 
@@ -80,9 +82,10 @@ public class UDPClientTest {
         //client.sendPacket(d);
 
         System.out.println("Pastas syncronizadas: "+(partSynchronized(m, m2)&&partSynchronized(m2,m)));
-        
-        //client.sendEcho("end");
-        //client.close();
+
+        FIN end = new FIN();
+        client.sendPacket(end);
+        client.close();
     }
 
     public static void main(String[] args){
