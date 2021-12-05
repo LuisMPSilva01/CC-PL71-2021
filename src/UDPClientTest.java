@@ -39,19 +39,32 @@ public class UDPClientTest {
         }
     }
 
-    //verifica se uma pasta tem todos os elementos de outra
-    public static boolean partSynchronized(Map<String, Long> mine, Map<String, Long> other){
-        boolean res = true;
+    public static Map<String, Long> partSynchronized(Map<String, Long> mine, Map<String, Long> other){
+        Map<String, Long> res = new HashMap<String, Long>();
         Long l;
 
         for(Map.Entry<String, Long> entry: other.entrySet()){
             if((l = mine.get(entry.getKey())) != null){
-                if(!entry.getValue().equals(l)){
-                    res = false; break;
+                if(!entry.getValue().equals(l)    ){
+                    res.put(entry.getKey(), entry.getValue());
                 }
             }
             else{
-                res = false; break;
+                res.put(entry.getKey(), entry.getValue());
+            }
+        }
+
+        return res;
+    }
+
+    public static boolean isInSubfolder(String filename){
+        boolean res = false;
+        char[] v = filename.toCharArray();
+
+        for(int i = 0; i < filename.length() - 1; i++){
+            if(v[i] == '|' && v[i + 1] == '|'){
+                res = true;
+                break;
             }
         }
 
@@ -61,8 +74,8 @@ public class UDPClientTest {
     public static void UDPClientTest() throws IOException {
         EchoClient client = new EchoClient();
 
-        File folder = new File("C:\\Users\\Acer\\Desktop\\TESTE1");
-        File folder2 = new File("C:\\Users\\Acer\\Desktop\\TESTE2");
+        File folder = new File("/home/ray/Downloads/testes");
+        File folder2 = new File("/home/ray/Downloads/testes2");
 
         Map<String, Long> m = new HashMap<String, Long>();
         Map<String, Long> m2 = new HashMap<String, Long>();
@@ -72,15 +85,12 @@ public class UDPClientTest {
         getFilesInFolder(m2, folder2, "");
 
         FILES f = new FILES(m);
-        System.out.println(f);
-        //File test = new File("/home/ray/Downloads/testes/server.c");
-        //byte[] fileContent = Files.readAllBytes(test.toPath());
+        File test = new File("/home/ray/Downloads/testes/blah.c");
+        client.sendFile(test);
 
         //DATA d = new DATA(1, fileContent);
         //client.sendPacket(d);
 
-        System.out.println("Pastas syncronizadas: "+(partSynchronized(m, m2)&&partSynchronized(m2,m)));
-        
         //client.sendEcho("end");
         //client.close();
     }
