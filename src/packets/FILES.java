@@ -4,9 +4,14 @@ import java.io.IOError;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 public class FILES extends Pacote{
+    List<String> ficheiros;
+    long size;
+
     public FILES(int bloco,int nblocos,String fileName,long fileSize) {
         super(1+4+4+fileName.length()+1+8+1);
         bytes[0] = 6;
@@ -65,6 +70,36 @@ public class FILES extends Pacote{
         }
         buf[pos] = -1;    
         
+        System.arraycopy(buf, 0, this.bytes, 0, buf.length);
+    }
+
+    public FILES(byte[] array) throws IOException{
+        super(array.length);
+        bytes = array.clone();
+        int pos = 1;
+        this.ficheiros = new ArrayList<>();
+        this.size=0;
+
+        while (true){
+            byte[] filenameSizeArray = new byte[4];
+            System.arraycopy(array, pos, filenameSizeArray, 0, 4);
+            ByteBuffer wrapped = ByteBuffer.wrap(filenameSizeArray);
+            int fileNameSizeInt = wrapped.getInt();
+            pos += 4;
+
+            byte[] filenameArray = new byte[fileNameSizeInt];
+            System.arraycopy(array, pos, filenameArray, 0, fileNameSizeInt);
+            this.ficheiros.add(new String(filenameArray, StandardCharsets.UTF_8));
+            pos += fileNameSizeInt;
+
+            byte[] fileSizeArray = new byte[8];
+            System.arraycopy(array, pos, fileSizeArray, 0, 8);
+            wrapped = ByteBuffer.wrap(fileSizeArray);
+            this.size+=wrapped.getLong();
+            pos += 8;
+        }
+        buf[pos] = -1;
+
         System.arraycopy(buf, 0, this.bytes, 0, buf.length);
     }
 }

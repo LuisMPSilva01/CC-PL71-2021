@@ -61,8 +61,8 @@ public class UDPClientTest {
     public static void UDPClientTest() throws IOException {
         EchoClient client = new EchoClient();
 
-        File folder = new File("/home/ray/Downloads/testes");
-        File folder2 = new File("/home/ray/Downloads/teste");
+        File folder = new File("C:\\Users\\Acer\\Desktop\\TESTE1");
+        File folder2 = new File("C:\\Users\\Acer\\Desktop\\TESTE2");
 
         Map<String, Long> m = new HashMap<String, Long>();
         Map<String, Long> m2 = new HashMap<String, Long>();
@@ -71,15 +71,15 @@ public class UDPClientTest {
         getFilesInFolder(m, folder, "");
         getFilesInFolder(m2, folder2, "");
 
-        //FILES f = new FILES(m);
+        FILES f = new FILES(m);
+        System.out.println(f);
+        //File test = new File("/home/ray/Downloads/testes/server.c");
+        //byte[] fileContent = Files.readAllBytes(test.toPath());
 
-        File test = new File("/home/ray/Downloads/testes/server.c");
-        byte[] fileContent = Files.readAllBytes(test.toPath());
+        //DATA d = new DATA(1, fileContent);
+        //client.sendPacket(d);
 
-        DATA d = new DATA(1, fileContent);
-        client.sendPacket(d);
-
-        System.out.println(partSynchronized(m, m2));
+        System.out.println("Pastas syncronizadas: "+(partSynchronized(m, m2)&&partSynchronized(m2,m)));
         
         //client.sendEcho("end");
         //client.close();
