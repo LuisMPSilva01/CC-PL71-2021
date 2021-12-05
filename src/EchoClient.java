@@ -18,14 +18,6 @@ public class EchoClient {
         address = InetAddress.getByName("localhost");
     }
 
-    public void sendEcho(String msg) throws IOException {
-        byte[] buf = msg.getBytes();
-        DatagramPacket packet = new DatagramPacket(buf, buf.length, address, 8888);
-        socket.send(packet);
-        packet = new DatagramPacket(buf, buf.length);
-        return;
-    }
-
     public void sendPacket(Pacote p) throws IOException {
         byte[] buf = p.getContent();
         DatagramPacket packet = new DatagramPacket(buf, buf.length, address, 8888);

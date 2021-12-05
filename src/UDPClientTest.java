@@ -85,14 +85,30 @@ public class UDPClientTest {
         getFilesInFolder(m2, folder2, "");
 
         FILES f = new FILES(m);
+<<<<<<< HEAD
         File test = new File("/home/ray/Downloads/testes/blah.c");
         client.sendFile(test);
+=======
+        System.out.println(f);
+
+        client.sendPacket(f);
+        //File test = new File("/home/ray/Downloads/testes/server.c");
+        //byte[] fileContent = Files.readAllBytes(test.toPath());
+>>>>>>> b53ab6dcf5d47b91ec8b27837e59a7cfcf58ada9
 
         //DATA d = new DATA(1, fileContent);
         //client.sendPacket(d);
 
+<<<<<<< HEAD
         //client.sendEcho("end");
         //client.close();
+=======
+        System.out.println("Pastas syncronizadas: "+(partSynchronized(m, m2)&&partSynchronized(m2,m)));
+
+        FIN end = new FIN();
+        client.sendPacket(end);
+        client.close();
+>>>>>>> b53ab6dcf5d47b91ec8b27837e59a7cfcf58ada9
     }
 
     public static void main(String[] args){
