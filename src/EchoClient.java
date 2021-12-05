@@ -1,5 +1,10 @@
+import java.io.File;
 import java.io.IOException;
 import java.net.*;
+import java.util.HashMap;
+import java.util.Map;
+
+import packets.Pacote;
 
 public class EchoClient {
     private DatagramSocket socket;
@@ -12,10 +17,17 @@ public class EchoClient {
 
     public void sendEcho(String msg) throws IOException {
         byte[] buf = msg.getBytes();
-        DatagramPacket packet
-                = new DatagramPacket(buf, buf.length, address, 8888);
+        DatagramPacket packet = new DatagramPacket(buf, buf.length, address, 8888);
         socket.send(packet);
         packet = new DatagramPacket(buf, buf.length);
+        return;
+    }
+
+    public void sendPacket(Pacote p) throws IOException {
+        byte[] buf = p.getContent();
+        DatagramPacket packet = new DatagramPacket(buf, buf.length, address, 8888);
+        socket.send(packet);
+        //packet = new DatagramPacket(buf, buf.length);
         return;
     }
 

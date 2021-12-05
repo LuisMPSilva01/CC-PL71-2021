@@ -2,8 +2,7 @@ package packets;
 
 public class FIN extends Pacote{
     public FIN() {
-        super(2);
-        bytes[0]=0;
-        bytes[1]=6;
+        super(1);
+        this.bytes[0] = 7;
     }
 }
