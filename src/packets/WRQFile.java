@@ -12,7 +12,9 @@ public class WRQFile extends Pacote{
         byte[] blocos = ByteBuffer.allocate(4).putInt(nblocks).array();
         System.arraycopy(blocos, 0, bytes, 1, blocos.length);
     }
-    public int getNBlocos(){
-        return ByteBuffer.wrap(bytes).getInt();
+    public int getNBlocos() {
+        byte[] tmp = new byte[4];
+        System.arraycopy(this.bytes, 1, tmp, 0, 4);
+        return ByteBuffer.wrap(tmp).getInt();
     }
 }

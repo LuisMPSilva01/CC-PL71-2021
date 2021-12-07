@@ -24,10 +24,11 @@ public class EchoServer extends Thread {
     private InetAddress address;
     private boolean running;
     private final int datablock = 1195;
+    private int defaultPort = 8888;
 
 
     public EchoServer() throws SocketException, UnknownHostException {
-        this.socket = new DatagramSocket(8888);
+        this.socket = new DatagramSocket(defaultPort);
         this.address = InetAddress.getByName("localhost");
     }
 
@@ -134,8 +135,6 @@ public class EchoServer extends Thread {
         File folder = new File(pacote.getFolderName());
         getFilesInFolder(map, folder, "");
 
-        for(Map.Entry<String, Long> entry: map.entrySet())
-            System.out.println(entry.getKey() + " | " + entry.getValue());
         FILES files = new FILES(map);
         sendPacket(files, address, port);
     }
@@ -150,6 +149,8 @@ public class EchoServer extends Thread {
                 break;
             case 2:
                 pacote=new RRQFile(array);
+                RRQFile tmp = (RRQFile) pacote;
+                System.out.println("identify: " + tmp.getFileName());
                 Thread ds = new Thread(new DataSender((RRQFile) pacote,address,port));
                 ds.start();
                 break;
@@ -157,7 +158,7 @@ public class EchoServer extends Thread {
             case 4: //DATA
             case 5:
                 pacote = new ACK(array);
-                System.out.println("ACK");
+                //System.out.println("ACK");
                 break;
             case 6:
                 pacote = new FILES(array);

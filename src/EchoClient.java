@@ -18,6 +18,7 @@ import packets.*;
 public class EchoClient extends Thread{
     private DatagramSocket socket;
     private InetAddress address;
+    private int defaultPort = 8888;
     private final int datablock = 1195;
 
 
@@ -28,7 +29,7 @@ public class EchoClient extends Thread{
 
     public void sendPacket(Pacote p) throws IOException {
         byte[] buf = p.getContent();
-        DatagramPacket packet = new DatagramPacket(buf, buf.length, address, 8888);
+        DatagramPacket packet = new DatagramPacket(buf, buf.length, address, defaultPort);
         socket.send(packet);
         return;
     }
@@ -67,16 +68,6 @@ public class EchoClient extends Thread{
         return m;
     }
 
-    public static void listFilesInFolder(File folder,String path) {
-        for (File fileEntry : folder.listFiles()) {
-            if (fileEntry.isDirectory()) {
-                listFilesInFolder(fileEntry, path + fileEntry.getName() + "||");
-            } else {
-                System.out.println(path + fileEntry.getName());
-            }
-        }
-    }
-
     public static void getFilesInFolder(Map<String, Long> m, File folder, String path) {
         for (File fileEntry : folder.listFiles()) {
             if (fileEntry.isDirectory()) {
@@ -84,12 +75,6 @@ public class EchoClient extends Thread{
             } else {
                 m.put(path + fileEntry.getName(), fileEntry.length());
             }
-        }
-    }
-
-    public static void listFiles(File folder) {
-        for (File fileEntry : folder.listFiles()) {
-            System.out.println(fileEntry.getName());
         }
     }
 
@@ -127,8 +112,7 @@ public class EchoClient extends Thread{
 
 
     public Pacote analisePacket(byte[] array) throws IOException {
-
-        Pacote pacote = new Pacote(3); //mudar obviamente
+        Pacote pacote = new Pacote(1200);
         switch (array[0]) {
             case 1:
                 RRQFolder p = new RRQFolder(array);
@@ -194,19 +178,17 @@ public class EchoClient extends Thread{
         Map<String, Long> missing = partSynchronized(mine, other);
         Thread[] missingFiles = new Thread[missing.size()];
         int i=0;
-        for(Map.Entry<String, Long> entry: missing.entrySet()){                 //verificar erros
-            missingFiles[i] = new Thread(new DataReciever(InetAddress.getByName("localhost"),
-                    1025,"C:\\Users\\Acer\\Desktop\\tp2.rar",13389959));
+        System.out.println("size: " + missing.size());
+        for(Map.Entry<String, Long> entry: missing.entrySet()){
+            String fileName = otherFolder.getAbsolutePath() + "/" + entry.getKey();
+            String newFileName = myFolder.getAbsolutePath() + "/" + entry.getKey();
+            missingFiles[i] = new Thread(new DataReciever(InetAddress.getByName("localhost"), defaultPort, fileName, newFileName, entry.getValue()));
             missingFiles[i].start();
-
-            RRQFile rrq = new RRQFile(otherFolder.getAbsolutePath() + "/" + entry.getKey());
-            sendPacket(rrq);
-            getFileHandler(myFolder.getAbsolutePath() + "/" + entry.getKey(), entry.getValue());
             i++;
         }
 
-        for(int j=0;j<i;j++){                 //verificar erros
-            missingFiles[i].join();
+        for(int j=0;j<i;j++){
+            missingFiles[j].join();
         }
     }
 
@@ -214,7 +196,6 @@ public class EchoClient extends Thread{
         byte[] buf = new byte[1200];
         DatagramPacket packet = new DatagramPacket(buf, buf.length);
 
-        System.out.println(newFileName);
         this.socket.receive(packet);
         Pacote pacote = analisePacket(buf);
         WRQFile tmp = (WRQFile) pacote;
@@ -275,27 +256,26 @@ public class EchoClient extends Thread{
     }
 
     public void run() {
-        File folder1 = new File("C:\\Users\\Acer\\Desktop\\teste1");
-        File folder2 = new File("C:\\Users\\Acer\\Desktop\\teste2");
+        File folder1 = new File("/home/ray/Downloads/teste3");
+        File folder2 = new File("/home/ray/Downloads/teste2");
 
         Map<String, Long> m = new HashMap<String, Long>();
         Map<String, Long> m2 = new HashMap<String, Long>();
 
-
         getFilesInFolder(m, folder1, "");
         getFilesInFolder(m2, folder2, "");
 
-        RRQFolder rrq = new RRQFolder(folder1.getAbsolutePath());
+        RRQFolder rrqf = new RRQFolder(folder2.getAbsolutePath());
 
         try{
-            sendPacket(rrq);
+            sendPacket(rrqf);
 
             byte[] buf = new byte[1200];
             DatagramPacket packet = new DatagramPacket(buf, buf.length);
             this.socket.receive(packet);
 
             Pacote pacote = analisePacket(buf);
-            getFilesHandler(pacote, folder2, folder1);
+            getFilesHandler(pacote, folder1, folder2);
 
             sendPacket(new FIN());
         }

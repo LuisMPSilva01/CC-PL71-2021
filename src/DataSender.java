@@ -25,7 +25,7 @@ class DataSender implements Runnable {
         this.port=port;
         this.socket = new DatagramSocket();
         this.fileName=rrqFile.getFileName();
-        this.socket.setSoTimeout(timeOut);
+        //this.socket.setSoTimeout(timeOut);
     }
 
     public void sendPacket(Pacote p, InetAddress address, int port) throws IOException {
@@ -36,9 +36,12 @@ class DataSender implements Runnable {
 
     public int sendWRQ(File file) throws IOException {
         int nrblocks = blocksNeeded(file.length());
+        byte b = 5;
         do {
-            sendPacket(new WRQFile(nrblocks),address,port);
-        } while (!waitPacket(5));
+            sendPacket(new WRQFile(nrblocks), address, port);
+            System.out.println("address: " + address + " | port: " + port);
+            System.out.println("hello");
+        } while (!waitPacket(b));
         return nrblocks;
     }
 
@@ -46,11 +49,15 @@ class DataSender implements Runnable {
         return (int) (Math.floorDiv(l, datablock) + 1);
     }
 
-    public boolean waitPacket(int identifier) throws IOException {
+    public boolean waitPacket(byte identifier) throws IOException {
         byte[] buf = new byte[1200];
         DatagramPacket packet = new DatagramPacket(buf, buf.length);
         try {
             socket.receive(packet);
+            for(int j = 0; j < 10; j++)
+                System.out.println("[" + j + "]: " + buf[j]);
+            System.out.println("received: " + buf[0]);
+            System.out.println("boolean: " + (buf[0] == identifier));
             return buf[0] == identifier;
         }
         catch (SocketTimeoutException e) {
@@ -60,9 +67,12 @@ class DataSender implements Runnable {
 
     public void sendFile(String fileName, int nBlocos, InetAddress address, int port) throws IOException{
         File f = new File(fileName);
+        System.out.println(fileName);
         byte[] fileContent = Files.readAllBytes(f.toPath());
+        System.out.println("fileContent: " + fileContent.length);
 
         for(int i = 0; i < nBlocos; i++){
+            System.out.println("data: " + i);
             byte[] blockContent;
             if(i == nBlocos - 1){
                 blockContent = new byte[fileContent.length - (i * datablock)];
@@ -71,10 +81,14 @@ class DataSender implements Runnable {
                 blockContent = new byte[datablock];
             }
             System.arraycopy(fileContent, i * datablock, blockContent, 0, blockContent.length);
+
             DATA d = new DATA(i + 1, blockContent);
+            for(int j = 0; j < 10; j++)
+                System.out.println("[" + j + "]: " + d.getContent()[j]);
             sendPacket(d, address, port);
         }
     }
+
     public void run(){
         try {
             File f = new File(this.fileName);
