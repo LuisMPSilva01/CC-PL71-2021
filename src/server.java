@@ -7,7 +7,7 @@ public class server {
         ServerSocket serverSocket = null;
 
         try {
-            serverSocket = new ServerSocket(8888);
+            serverSocket = new ServerSocket(1025);
         } catch (IOException ex) {
             System.out.println("Can't setup server on this port number. ");
         }

@@ -37,7 +37,7 @@ public class cliente {
         Socket socket = null;
         String host = "127.0.0.1";
 
-        socket = new Socket(host, 8888);
+        socket = new Socket(host, 1025);
 
 
         File file = new File(args[0]);

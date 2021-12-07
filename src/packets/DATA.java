@@ -15,4 +15,9 @@ public class DATA extends Pacote{
     public DATA(byte[] bytes) {
         super(bytes);
     }
+    public int getNBloco() {
+        byte[] tmp = new byte[4];
+        System.arraycopy(this.bytes, 1, tmp, 0, 4);
+        return ByteBuffer.wrap(tmp).getInt();
+    }
 }

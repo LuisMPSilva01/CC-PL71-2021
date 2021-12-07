@@ -6,17 +6,21 @@ public class RRQFolder extends Pacote {
     public RRQFolder(byte[] bytes) {
         super(bytes);
     }
-    public RRQFolder(String folder) {
 
-        super(1+folder.length()+1);
-        bytes[0] = 1;
+    public RRQFolder(String folder) {
+        super(1 + folder.length() + 1);
+        this.bytes[0] = 1;
         byte[] fArray = folder.getBytes(StandardCharsets.UTF_8);
-        System.arraycopy(fArray, 0, bytes, 1, fArray.length);
-        bytes[bytes.length-1] = 0;
+        System.arraycopy(fArray, 0, this.bytes, 1, fArray.length);
+        this.bytes[this.bytes.length - 1] = 0;
     }
+
     public String getFolderName(){
-        byte[] fArray= new byte[bytes.length-2];
-        System.arraycopy(bytes, 1, fArray, 0, bytes.length-2);
-        return new String(fArray, StandardCharsets.UTF_8);
+        int i;
+        for(i = 1; i < this.bytes.length && this.bytes[i] != 0; i++)
+            ;
+        byte[] folderName = new byte[i - 1];
+        System.arraycopy(this.bytes, 1, folderName, 0, i - 1);
+        return new String(folderName, StandardCharsets.UTF_8);
     }
 }
