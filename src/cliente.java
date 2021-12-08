@@ -1,6 +1,5 @@
 import java.io.*;
 import java.net.Socket;
-import java.util.Arrays;
 import java.util.logging.FileHandler;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
@@ -33,16 +32,12 @@ public class cliente {
         } catch(SecurityException e) {
             e.printStackTrace();
         }
-
-        Socket socket = null;
         String host = "127.0.0.1";
 
-        socket = new Socket(host, 1025);
+        Socket socket = new Socket(host, 1025);
 
 
         File file = new File(args[0]);
-        // Get the size of the file
-        long length = file.length();
         byte[] bytes = new byte[16 * 1024];
         InputStream in = new FileInputStream(file);
         OutputStream out = socket.getOutputStream();

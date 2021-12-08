@@ -9,7 +9,7 @@ import java.nio.file.Path;
 public class FFSync {
     private static boolean netIsAvailable() {
         try {
-            URL url = new URL("http://www.google.com");
+            URL url = new URL("https://www.google.com");
             URLConnection conn = url.openConnection();
             conn.connect();
             conn.getInputStream().close();
@@ -21,13 +21,12 @@ public class FFSync {
         }
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args){
         if(args.length!=2){
             System.out.println("Formato errado, tente : FFSync pasta1 10.1.1.1");
             return;
         }
         System.out.println("Net is: "+netIsAvailable()); //Adicionar returns caso falso
         System.out.println("Ficheiro existe: "+Files.exists(Path.of(args[0]))); //Adicionar returns caso falso
-        return;
     }
 }

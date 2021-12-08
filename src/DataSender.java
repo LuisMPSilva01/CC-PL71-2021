@@ -4,12 +4,9 @@ import packets.RRQFile;
 import packets.WRQFile;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.*;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.List;
 
 
 class DataSender implements Runnable {
@@ -20,7 +17,7 @@ class DataSender implements Runnable {
     private final int datablock = 1195;
     private final int timeOut = 1000;
 
-    public DataSender(RRQFile rrqFile,InetAddress address,int port) throws SocketException, UnknownHostException {
+    public DataSender(RRQFile rrqFile,InetAddress address,int port) throws SocketException {
         this.address=address;
         this.port=port;
         this.socket = new DatagramSocket();
