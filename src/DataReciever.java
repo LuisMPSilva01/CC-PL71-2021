@@ -17,7 +17,7 @@ class DataReciever implements Runnable {
     private final int datablock = 1195;
     private final int timeOut = 10000;
 
-    public DataReciever(InetAddress address,int serverPort,String fileName,String newFileName,long fileSize) throws SocketException, UnknownHostException {
+    public DataReciever(InetAddress address,int serverPort,String fileName,String newFileName,long fileSize) throws SocketException{
         this.address=address;
         this.port=serverPort;
         this.socket = new DatagramSocket();
@@ -31,7 +31,6 @@ class DataReciever implements Runnable {
         byte[] buf = p.getContent();
         DatagramPacket packet = new DatagramPacket(buf, buf.length, address, port);
         socket.send(packet);
-        return;
     }
 
     public int sendRRQ() throws IOException {

@@ -8,10 +8,12 @@ import packets.*;
 public class EchoServer extends Thread {
     private final DatagramSocket socket;
     boolean running = true;
+    public File folder;
+    private final int SO=1; //Linux -> 0 | Windows -> everything else
 
-
-    public EchoServer(int defaultPort) throws SocketException{
-        this.socket = new DatagramSocket(defaultPort);
+    public EchoServer(DatagramSocket socket,File folder) throws SocketException{
+        this.socket = socket;
+        this.folder=folder;
     }
 
     public void sendPacket(Pacote p, InetAddress address, int port) throws IOException {
@@ -30,9 +32,8 @@ public class EchoServer extends Thread {
         }
     }
 
-    public void sendFILES(RRQFolder pacote, InetAddress address, int port) throws IOException {
+    public void sendFILES(InetAddress address, int port) throws IOException {
         HashMap<String, Long> map = new HashMap<>();
-        File folder = new File(pacote.getFolderName());
         getFilesInFolder(map, folder, "");
 
         FILES files = new FILES(map);
@@ -44,10 +45,12 @@ public class EchoServer extends Thread {
         Pacote pacote;
         switch (array[0]) {
             case 1://RRQFolder
-                pacote = new RRQFolder(array);
-                sendFILES((RRQFolder) pacote, address, port);
+                System.out.println("RRQFolder");
+                sendPacket(new FolderName(folder.getAbsolutePath()),address,port);
+                sendFILES(address, port);
                 break;
             case 2://RRQFile
+                System.out.println("RRQFile");
                 pacote=new RRQFile(array);
                 RRQFile tmp = (RRQFile) pacote;
                 System.out.println("identify: " + tmp.getFileName());
@@ -55,14 +58,20 @@ public class EchoServer extends Thread {
                 ds.start();
                 break;
             case 3: //WRQFile
+                System.out.println("WRQFile");
             case 4: //DATA
+                System.out.println("DATA");
             case 5://ACK
-                //System.out.println("ACK");
+                System.out.println("ACK");
                 break;
             case 6://FILES
+                System.out.println("Packet recieved FILES");
                 break;
             case 7://FIN
-                //running=false;
+                System.out.println("Packet recieved FIN");
+                running=false;
+            case 8://ServerFolderName
+                System.out.println("Packet recieved ServerFolderName");
                 break;
             default:
         }

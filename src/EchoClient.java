@@ -13,13 +13,17 @@ public class EchoClient extends Thread{
     private final DatagramSocket socket;
     private final InetAddress address;
     private final int defaultPort;
+    private String serverFolder;
+    private File folder;
     private final int SO=1; //Linux -> 0 | Windows -> everything else
 
 
-    public EchoClient(int defaultPort) throws SocketException, UnknownHostException {
-        socket = new DatagramSocket();
-        address = InetAddress.getByName("localhost");
+    public EchoClient(int defaultPort,InetAddress address,File folder) throws SocketException{
+        this.socket = new DatagramSocket();
+        this.socket.setSoTimeout(100);        //TIMEOUT
+        this.address = address;
         this.defaultPort=defaultPort;
+        this.folder=folder;
     }
 
     public void sendPacket(Pacote p) throws IOException {
@@ -79,7 +83,7 @@ public class EchoClient extends Thread{
         return res;
     }
 
-    public void getFilesHandler(Pacote pacote, File myFolder, File otherFolder) throws IOException, InterruptedException {
+    public void getFilesHandler(FILES pacote, File myFolder) throws IOException, InterruptedException {
         Map<String, Long> mine = new HashMap<>();
         getFilesInFolder(mine, myFolder, "");
         Map<String, Long> other = decodeFILES(pacote.getContent());
@@ -89,7 +93,7 @@ public class EchoClient extends Thread{
         System.out.println("size: " + missing.size());
         if(SO==0){
             for(Map.Entry<String, Long> entry: missing.entrySet()){
-                String fileName = otherFolder.getAbsolutePath() + "/" + entry.getKey();
+                String fileName = serverFolder + "/" + entry.getKey();
                 String newFileName = myFolder.getAbsolutePath() + "/" + entry.getKey();
                 missingFiles[i] = new Thread(new DataReciever(InetAddress.getByName("localhost"), defaultPort, fileName, newFileName, entry.getValue()));
                 missingFiles[i].start();
@@ -97,7 +101,7 @@ public class EchoClient extends Thread{
             }
         } else {
             for(Map.Entry<String, Long> entry: missing.entrySet()){
-                String fileName = otherFolder.getAbsolutePath() + "\\" + entry.getKey();
+                String fileName = serverFolder + "\\" + entry.getKey();
                 String newFileName = myFolder.getAbsolutePath() + "\\" + entry.getKey();
                 missingFiles[i] = new Thread(new DataReciever(InetAddress.getByName("localhost"), defaultPort, fileName, newFileName, entry.getValue()));
                 missingFiles[i].start();
@@ -110,64 +114,36 @@ public class EchoClient extends Thread{
         }
     }
 
-    public Pacote analisePacket(byte[] array) throws IOException {
-        Pacote pacote = new Pacote(1200);
-        switch (array[0]) {
-            case 1: //RRQFolder
-                System.out.println("RRQFolder");
-                break;
-            case 2: //RRQFile
-                System.out.println("RRQFile");
-                break;
-            case 3: //WRQFile
-                System.out.println("WRQFile");
-                break;
-            case 4: //DATA
-                System.out.println("DATA");
-                break;
-            case 5: //ACK
-                System.out.println("ACK");
-                break;
-            case 6: //FILES
-                System.out.println("Packet recieved FILES");
-                pacote = new FILES(array);
-                break;
-            case 7: //FIN
-                System.out.println("Packet recieved FIN");
-                break;
-            default:
-                return null;
+    public FILES waitFILES(){
+        byte[] buf = new byte[1200];
+        DatagramPacket packet = new DatagramPacket(buf, buf.length);
+        try {
+            this.socket.receive(packet);
+            if(buf[0]!=8) return null;
+            FolderName fn = new FolderName(buf);
+            this.serverFolder = fn.getFolderName(); //Analiza FolderName
+
+            this.socket.receive(packet);
+            if(buf[0]!=6) return null;
+            return new FILES(buf);
+        } catch (IOException ioe){
+            return null;
         }
-        return pacote;
     }
 
     public void run() {
-        File folder1,folder2;
-        if (SO==0){
-            folder1 = new File("/home/ray/Downloads/teste3");
-            folder2 = new File("/home/ray/Downloads/teste2");
-        }else {
-            folder1 = new File("C:\\Users\\Acer\\Desktop\\teste1");
-            folder2 = new File("C:\\Users\\Acer\\Desktop\\teste2");
-        }
-
         Map<String, Long> m = new HashMap<>();
-        Map<String, Long> m2 = new HashMap<>();
+        getFilesInFolder(m, folder, "");
 
-        getFilesInFolder(m, folder1, "");
-        getFilesInFolder(m2, folder2, "");
-
-        RRQFolder rrqf = new RRQFolder(folder2.getAbsolutePath());
-
+        RRQFolder rrqf = new RRQFolder(folder.getAbsolutePath());
         try{
-            sendPacket(rrqf);
+            FILES files;
+            do{
+                sendPacket(rrqf);
+            }while ((files=waitFILES())==null);
 
-            byte[] buf = new byte[1200];
-            DatagramPacket packet = new DatagramPacket(buf, buf.length);
-            this.socket.receive(packet);
 
-            Pacote pacote = analisePacket(buf);
-            getFilesHandler(pacote, folder1, folder2);
+            getFilesHandler(files, folder);
 
             sendPacket(new FIN());
         }
