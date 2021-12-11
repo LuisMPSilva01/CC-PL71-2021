@@ -2,6 +2,7 @@ import packets.*;
 
 import java.io.*;
 import java.net.*;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,7 +15,7 @@ class DataReciever implements Runnable {
     private String fileName;
     private String newFileName;
     private long fileSize;
-    private final int datablock = 1195;
+    private final int datablock = 1191;
     private final int timeOut = 10000;
 
     public DataReciever(InetAddress address,int serverPort,String fileName,String newFileName,long fileSize) throws SocketException{
@@ -77,12 +78,6 @@ class DataReciever implements Runnable {
         return fileContent;
     }
 
-    public int findEOF(byte[] buf){
-        int i;
-        for(i = 5; i < buf.length && buf[i] != 0; i++)
-            ;
-        return i;
-    }
 
     public void writeToFile(File file, byte[] buf) throws FileNotFoundException, IOException{
         System.out.println("newfile: " + file.getAbsolutePath());
@@ -105,23 +100,12 @@ class DataReciever implements Runnable {
             this.port=packet.getPort();
             this.address=packet.getAddress();
 
-            for(int j = 0; j < 10; j++)
-                System.out.println("[" + j + "]: " + buf[j]);
-
             sendPacket(new ACK(i));
-            byte[] tmp;
-            if(i == nrblocks - 1){
-                int EOF = findEOF(buf);
-                tmp = new byte[EOF - 5];
-                System.out.println("EOF: " + EOF);
-                System.out.println("tmp size: " + tmp.length);
-                System.arraycopy(buf, 5, tmp, 0, EOF - 5);
-            }
-            else{
-                tmp = new byte[datablock];
-                System.out.println("tmp size: " + tmp.length);
-                System.arraycopy(buf, 5, tmp, 0, datablock);
-            }
+            byte[] blockSize = new byte[4];
+            System.arraycopy(buf, 5, blockSize, 0, 4);
+            int bSize = ByteBuffer.wrap(blockSize).getInt();
+            byte[] tmp = new byte[bSize];
+            System.arraycopy(buf, 9, tmp, 0, bSize);
             list.add(tmp);
         }
         System.out.println("depois de ti");
@@ -129,6 +113,7 @@ class DataReciever implements Runnable {
         byte[] fileContent = buildFileContent(list, filesize);
         writeToFile(f, fileContent);
     }
+
 
     @Override
     public void run(){

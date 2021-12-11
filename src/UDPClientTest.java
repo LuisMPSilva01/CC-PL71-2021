@@ -6,7 +6,6 @@ import java.net.UnknownHostException;
 public class UDPClientTest {
     public static void main(String[] args) throws SocketException, UnknownHostException {
         System.out.println("Client Started");
-
         int SO=1;
         File folder;
         if (SO==0){

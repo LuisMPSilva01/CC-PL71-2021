@@ -6,6 +6,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.TimeoutException;
 
 import packets.*;
 
@@ -114,12 +115,31 @@ public class EchoClient extends Thread{
         }
     }
 
-    public FILES waitFILES(){
+    public FILES waitFILES() throws IOException{
+        byte[] buf = new byte[1200];
+        DatagramPacket packet = new DatagramPacket(buf, buf.length);
+        int nBloco=-1; //Numero
+        do { //Ciclo para esperar o pacote do FILES
+            sendPacket(new ACK(nBloco)); //Envia sinalizador do ultimo pacote recebido
+            nBloco++;
+            try {
+                this.socket.receive(packet); //Recebe o proximo pacote
+            } catch (SocketTimeoutException e) {
+                nBloco--;
+            }
+        } while (buf[0]!=8); //Verificação do pacote
+
+        return new FILES(buf);
+    }
+
+    public FILES waitFILESandName(){
         byte[] buf = new byte[1200];
         DatagramPacket packet = new DatagramPacket(buf, buf.length);
         try {
-            this.socket.receive(packet);
-            if(buf[0]!=8) return null;
+            do { //Ciclo para esperar o pacote do folder name
+                this.socket.receive(packet);
+            } while (buf[0]!=8); //Verificação do pacote
+
             FolderName fn = new FolderName(buf);
             this.serverFolder = fn.getFolderName(); //Analiza FolderName
 
@@ -140,7 +160,7 @@ public class EchoClient extends Thread{
             FILES files;
             do{
                 sendPacket(rrqf);
-            }while ((files=waitFILES())==null);
+            }while ((files=waitFILESandName())==null);
 
 
             getFilesHandler(files, folder);

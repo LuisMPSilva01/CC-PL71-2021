@@ -4,9 +4,11 @@ import packets.RRQFile;
 import packets.WRQFile;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.*;
 import java.nio.file.Files;
+import java.util.Arrays;
 
 
 class DataSender implements Runnable {
@@ -14,7 +16,7 @@ class DataSender implements Runnable {
     private final int port;
     private final InetAddress address;
     private String fileName;
-    private final int datablock = 1195;
+    private final int datablock = 1191;
     private final int timeOut = 1000;
 
     public DataSender(RRQFile rrqFile,InetAddress address,int port) throws SocketException {
@@ -64,26 +66,29 @@ class DataSender implements Runnable {
 
     public void sendFile(String fileName, int nBlocos, InetAddress address, int port) throws IOException{
         File f = new File(fileName);
-        System.out.println(fileName);
-        byte[] fileContent = Files.readAllBytes(f.toPath());
-        System.out.println("fileContent: " + fileContent.length);
+            System.out.println(fileName);
+            FileInputStream fis = new FileInputStream(fileName);
+            int filesize = (int) f.length();
+            System.out.println("fileContent: " + f.length());
 
-        for(int i = 0; i < nBlocos; i++){
-            System.out.println("data: " + i);
-            byte[] blockContent;
-            if(i == nBlocos - 1){
-                blockContent = new byte[fileContent.length - (i * datablock)];
-            }
-            else{
-                blockContent = new byte[datablock];
-            }
-            System.arraycopy(fileContent, i * datablock, blockContent, 0, blockContent.length);
+            for(int i = 0; i < nBlocos; i++){
+                byte[] blockContent;
+                if(i == nBlocos - 1){
+                    blockContent = new byte[filesize - (i * datablock)];
+                    fis.read(blockContent);
+                }
+                else{
+                    blockContent = new byte[datablock];
+                    fis.read(blockContent);
+                }
+                System.out.println("data: " + i + " | sizeBlock: " + blockContent.length);
 
             DATA d = new DATA(i + 1, blockContent);
-            for(int j = 0; j < 10; j++)
-                System.out.println("[" + j + "]: " + d.getContent()[j]);
             sendPacket(d, address, port);
+            byte b = 5;
+            waitPacket(b);
         }
+        fis.close();
     }
 
     public void run(){

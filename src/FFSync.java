@@ -5,11 +5,15 @@ import java.io.IOException;
 import java.net.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.text.DateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Locale;
+import java.util.Scanner;
 
 
 public class FFSync {
@@ -28,6 +32,17 @@ public class FFSync {
     }
 
     public static void main(String[] args) throws IOException {
+
+        //Start of verificação de password
+        Scanner sc= new Scanner(System.in);
+        String password;
+        do {
+            System.out.println("Ensira a password: ");
+            password = sc.next();                     //Somos rewarded por perguntar ao peer qual é password?
+        } while (password.equals("arroz\n"));
+        //end of verificação de password
+
+        Date start = new Date(); //Hora de começo
         /*
         if(args.length!=2){
             System.out.println("Formato errado, tente : FFSync pasta1 10.1.1.1");
@@ -37,24 +52,24 @@ public class FFSync {
         System.out.println("Ficheiro existe: "+Files.exists(Path.of(args[0]))); //Adicionar returns caso falso
         */
 
-        FileOutputStream fos = new FileOutputStream("logs", true);  ////Logs
-        fos.write(("INFO: FFSync "+ args[0] +" " + Arrays.toString(Arrays.copyOfRange(args, 1, args.length)) + "\n" +
-                   "Date: "+ LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) +"\n"+
-                   "-----------------------------------------------------\n").getBytes());
-        fos.close(); ////End of Logs
-
         int defaultPort=8888;
         int SO = 1; //SO==0 LINUX || ELSE WINDOWS
-        File folder;
+        long startSize = Files.walk(Paths.get(args[0])) //Get folder starting size
+                .filter(p -> p.toFile().isFile())
+                .mapToLong(p -> p.toFile().length())
+                .sum();
 
         try {
-            if(args.length==2) {
+            if(args.length==2) { //Cenario normal
                 DatagramSocket socket = new DatagramSocket(defaultPort);
                 Thread servidor = new Thread(new EchoServer(socket,new File(args[0])));
                 servidor.start();
 
                 Thread cliente = new Thread(new EchoClient(defaultPort, InetAddress.getByName(args[1]),new File(args[0])));
                 cliente.start();
+
+                servidor.join();
+                cliente.join();
             } else { //Cenario de teste
                 File folder1,folder2;
                 if (SO==0){
@@ -79,9 +94,35 @@ public class FFSync {
 
                 Thread cliente2 = new Thread(new EchoClient(defaultPort, InetAddress.getByName("localhost"),folder2)); //change
                 cliente2.start();
+
+                servidor1.join();
+                cliente1.join();
+                servidor2.join();
+                cliente2.join();
             }
-        } catch (SocketException e) {
+        } catch (SocketException | InterruptedException e) {
             System.out.println("Porta em uso, tente novamente mais tarde");
         }
+
+        ////Start of Logs
+        Date finish = new Date();
+        long timeTaken = finish.getTime()-start.getTime();
+        long endSize = Files.walk(Paths.get(args[0])) //Get folder ending size
+                .filter(p -> p.toFile().isFile())
+                .mapToLong(p -> p.toFile().length())
+                .sum();
+
+        DateFormat DFormat = DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG, Locale.getDefault()); //Date format
+
+        FileOutputStream fos = new FileOutputStream("logs", true);
+        fos.write(("INFO: FFSync "+ args[0] +" " + Arrays.toString(Arrays.copyOfRange(args, 1, args.length)) + "\n" +
+                "Date: "+ DFormat.format(start) +"\n"+
+                "Time taken: " + (timeTaken) + " miliseconds\n" +
+                "StartSize: " + (startSize) + "\n" +
+                "EndSize: " + (endSize) + "\n" +
+                "Bitrate: " + ((endSize-startSize)/timeTaken) + "\n" + //Como conseguir o débito real?
+                "-----------------------------------------------------\n").getBytes());
+        fos.close();
+        ////End of Logs
     }
 }

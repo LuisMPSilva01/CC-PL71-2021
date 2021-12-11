@@ -1,9 +1,40 @@
-INFO: FFSync[yoo]
-Date: 2021-12-08 23:13:10
+INFO: FFSync C:\\Users\\Acer\\Desktop\\teste1 [10.2.2.1, 10.3.2.1]
+Date: December 11, 2021 at 10:38:34 AM GMT
+Time taken: 37 miliseconds
+Bitrate: 0
 -----------------------------------------------------
-INFO: FFSync yoo []
-Date: 2021-12-08 23:15:44
+INFO: FFSync C:\\Users\\Acer\\Desktop\\teste1 [10.2.2.1, 10.3.2.1]
+Date: December 11, 2021 at 10:40:08 AM GMT
+Time taken: 38 miliseconds
+StartSize: 1847
+EndSize: 1847
+Bitrate: 0
 -----------------------------------------------------
-INFO: FFSync ficheiro2 [10.2.2.1, 10.3.2.1]
-Date: 2021-12-08 23:16:12
+INFO: FFSync C:\\Users\\Acer\\Desktop\\teste1 [10.2.2.1, 10.3.2.1]
+Date: December 11, 2021 at 10:16:11 PM GMT
+Time taken: 77 miliseconds
+StartSize: 0
+EndSize: 1847
+Bitrate: 23
+-----------------------------------------------------
+INFO: FFSync C:\\Users\\Acer\\Desktop\\teste1 [10.2.2.1, 10.3.2.1]
+Date: December 11, 2021 at 10:30:31 PM GMT
+Time taken: 67 miliseconds
+StartSize: 0
+EndSize: 167
+Bitrate: 2
+-----------------------------------------------------
+INFO: FFSync C:\\Users\\Acer\\Desktop\\teste1 [10.2.2.1, 10.3.2.1]
+Date: December 11, 2021 at 10:33:00 PM GMT
+Time taken: 64 miliseconds
+StartSize: 167
+EndSize: 1847
+Bitrate: 26
+-----------------------------------------------------
+INFO: FFSync C:\\Users\\Acer\\Desktop\\teste1 [10.2.2.1, 10.3.2.1]
+Date: December 11, 2021 at 10:47:02 PM GMT
+Time taken: 70 miliseconds
+StartSize: 1680
+EndSize: 1847
+Bitrate: 2
 -----------------------------------------------------

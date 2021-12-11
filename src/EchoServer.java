@@ -13,7 +13,7 @@ public class EchoServer extends Thread {
 
     public EchoServer(DatagramSocket socket,File folder) throws SocketException{
         this.socket = socket;
-        this.folder=folder;
+        this.folder= folder;
     }
 
     public void sendPacket(Pacote p, InetAddress address, int port) throws IOException {
