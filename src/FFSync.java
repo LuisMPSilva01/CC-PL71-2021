@@ -111,7 +111,7 @@ public class FFSync {
                 .filter(p -> p.toFile().isFile())
                 .mapToLong(p -> p.toFile().length())
                 .sum();
-
+        long dataTransferida = endSize-startSize;
         DateFormat DFormat = DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG, Locale.getDefault()); //Date format
 
         FileOutputStream fos = new FileOutputStream("logs", true);
@@ -120,7 +120,8 @@ public class FFSync {
                 "Time taken: " + (timeTaken) + " miliseconds\n" +
                 "StartSize: " + (startSize) + "\n" +
                 "EndSize: " + (endSize) + "\n" +
-                "Bitrate: " + ((endSize-startSize)/timeTaken) + "\n" + //Como conseguir o débito real?
+                "Data transferida: " + dataTransferida + " bytes\n" +
+                "Bitrate: " + ((float)dataTransferida/timeTaken*1000) + " bytes/segundo\n" + //Como conseguir o débito real?
                 "-----------------------------------------------------\n").getBytes());
         fos.close();
         ////End of Logs
