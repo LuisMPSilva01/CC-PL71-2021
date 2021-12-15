@@ -18,7 +18,6 @@ class DataReciever implements Runnable {
     private final int datablock = 1191;
     private final int timeOut = 100;
     private int nBloco;
-    private String xD;
 
     public DataReciever(InetAddress address,int serverPort,String fileName,String newFileName,long fileSize) throws SocketException{
         this.address=address;
@@ -41,8 +40,6 @@ class DataReciever implements Runnable {
         WRQFile pacote;
         do {
             sendPacket(new RRQFile(fileName));
-            RRQFile dsadsa = new RRQFile(fileName);
-            this.xD= dsadsa.getFileName();
         } while ((pacote=getWRQ())==null);
         return pacote.getNBlocos();
     }

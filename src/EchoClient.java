@@ -16,7 +16,7 @@ public class EchoClient extends Thread{
     private final int defaultPort;
     private String serverFolder;
     private File folder;
-    private final int SO=1; //Linux -> 0 | Windows -> everything else
+    private final int SO=0; //Linux -> 0 | Windows -> everything else
 
 
     public EchoClient(int defaultPort,InetAddress address,File folder) throws SocketException{
