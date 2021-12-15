@@ -86,7 +86,7 @@ public class EchoClient extends Thread{
 
     public void getFilesHandler(FILES pacote, File myFolder) throws IOException, InterruptedException {
         Map<String, Long> mine = new HashMap<>();
-        getFilesInFolder(mine, myFolder, "");
+         getFilesInFolder(mine, myFolder, "");
         Map<String, Long> other = decodeFILES(pacote.getContent());
         Map<String, Long> missing = partSynchronized(mine, other);
         Thread[] missingFiles = new Thread[missing.size()];
@@ -115,37 +115,56 @@ public class EchoClient extends Thread{
         }
     }
 
-    public FILES waitFILES() throws IOException{
+    public FILES waitFILES(int nBlocos) throws IOException{
         byte[] buf = new byte[1200];
         DatagramPacket packet = new DatagramPacket(buf, buf.length);
+
         int nBloco=-1; //Numero
-        do { //Ciclo para esperar o pacote do FILES
-            sendPacket(new ACK(nBloco)); //Envia sinalizador do ultimo pacote recebido
+        boolean sendACK = true;
+
+        while (true){ //Ciclo para esperar o pacote do FILES
+            if(sendACK){  //Caso na iteração anterior tenha recebido o pacote errado, não vai enviar ack
+                sendPacket(new ACK(nBloco)); //Enviar o ack para desbloquear o FILES
+            } else sendACK=true;
             nBloco++;
-            try {
-                this.socket.receive(packet); //Recebe o proximo pacote
+
+            try { //Caso de sucesso
+                this.socket.receive(packet); //Receber pacote
+                if (buf[0] == 6) { //Verifica se é um pacote de DATA
+                    sendPacket(new ACK(nBloco)); //Enviar o ack para desbloquear o FILES
+                    return new FILES(buf);
+                } else {
+                    sendACK=false;
+                    nBloco--;
+                }
             } catch (SocketTimeoutException e) {
                 nBloco--;
             }
-        } while (buf[0]!=8); //Verificação do pacote
-
-        return new FILES(buf);
+        }
     }
 
-    public FILES waitFILESandName(){
+    public int waitFolderName(RRQFolder rrqf) throws IOException {
+        byte[] buf = new byte[1200];
+        DatagramPacket packet = new DatagramPacket(buf, buf.length);
+        do { //Ciclo para esperar o pacote do folder name
+            try {
+                sendPacket(rrqf);
+                this.socket.receive(packet);
+            }catch (SocketTimeoutException ignored){}
+        } while (buf[0]!=8); //Verificação do pacote
+
+        FolderName fn = new FolderName(buf);
+        this.serverFolder = fn.getFolderName();
+        return fn.getFilesBlocks();
+    }
+
+    public FILES waitFILESandName(RRQFolder rrqf){
         byte[] buf = new byte[1200];
         DatagramPacket packet = new DatagramPacket(buf, buf.length);
         try {
-            do { //Ciclo para esperar o pacote do folder name
-                this.socket.receive(packet);
-            } while (buf[0]!=8); //Verificação do pacote
+            int nBlocos=waitFolderName(rrqf); //Guarda o nome do folder
 
-            FolderName fn = new FolderName(buf);
-            this.serverFolder = fn.getFolderName(); //Analiza FolderName
-
-            this.socket.receive(packet);
-            if(buf[0]!=6) return null;
-            return new FILES(buf);
+            return waitFILES(nBlocos);
         } catch (IOException ioe){
             return null;
         }
@@ -158,10 +177,7 @@ public class EchoClient extends Thread{
         RRQFolder rrqf = new RRQFolder(folder.getAbsolutePath());
         try{
             FILES files;
-            do{
-                sendPacket(rrqf);
-            }while ((files=waitFILESandName())==null);
-
+            files=waitFILESandName(rrqf);
 
             getFilesHandler(files, folder);
 

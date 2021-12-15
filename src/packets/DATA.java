@@ -24,4 +24,16 @@ public class DATA extends Pacote{
         System.arraycopy(this.bytes, 1, tmp, 0, 4);
         return ByteBuffer.wrap(tmp).getInt();
     }
+    public int getblockSize() {
+        byte[] blockSize = new byte[4]; //Guardar conteudo
+        System.arraycopy(this.bytes, 5, blockSize, 0, 4);
+        return ByteBuffer.wrap(blockSize).getInt();
+    }
+
+    public byte[] getConteudo(){
+        int size=this.getblockSize();
+        byte[] tmp = new byte[size];
+        System.arraycopy(this.bytes, 9, tmp, 0, size);
+        return tmp;
+    }
 }

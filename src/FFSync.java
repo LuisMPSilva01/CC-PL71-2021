@@ -34,6 +34,7 @@ public class FFSync {
     public static void main(String[] args) throws IOException {
 
         //Start of verificação de password
+        /*
         Scanner sc= new Scanner(System.in);
         String password;
         do {
@@ -41,7 +42,7 @@ public class FFSync {
             password = sc.next();                     //Somos rewarded por perguntar ao peer qual é password?
         } while (password.equals("arroz\n"));
         //end of verificação de password
-
+    */
         Date start = new Date(); //Hora de começo
         /*
         if(args.length!=2){

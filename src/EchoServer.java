@@ -9,7 +9,7 @@ public class EchoServer extends Thread {
     private final DatagramSocket socket;
     boolean running = true;
     public File folder;
-    private final int SO=1; //Linux -> 0 | Windows -> everything else
+    public int nThreads=0;
 
     public EchoServer(DatagramSocket socket,File folder) throws SocketException{
         this.socket = socket;
@@ -37,24 +37,48 @@ public class EchoServer extends Thread {
         getFilesInFolder(map, folder, "");
 
         FILES files = new FILES(map);
-        sendPacket(files, address, port);
+
+        do {
+            sendPacket(files, address, port);
+        } while (waitACK()!=0);
     }
 
+    public void sendFolderName(InetAddress address, int port) throws IOException {
+        do {
+            sendPacket(new FolderName(folder.getAbsolutePath(),1),address,port);
+        } while (waitACK()!=-1);
+    }
+
+    public int waitACK() throws IOException {
+        byte[] buf = new byte[1200];
+        DatagramPacket packet = new DatagramPacket(buf, buf.length);
+        try {
+            socket.receive(packet);
+            if(buf[0]!=5){
+                return -2;
+            } else {
+                ACK ack = new ACK(buf);
+                return ack.getNBloco();
+            }
+        }
+        catch (SocketTimeoutException e) {
+            return -2;
+        }
+    }
 
     public void analisePacket(byte[] array, InetAddress address, int port) throws IOException {
         Pacote pacote;
         switch (array[0]) {
             case 1://RRQFolder
                 System.out.println("RRQFolder");
-                sendPacket(new FolderName(folder.getAbsolutePath()),address,port);
+                sendFolderName(address,port);
                 sendFILES(address, port);
                 break;
             case 2://RRQFile
                 System.out.println("RRQFile");
                 pacote=new RRQFile(array);
-                RRQFile tmp = (RRQFile) pacote;
-                System.out.println("identify: " + tmp.getFileName());
                 Thread ds = new Thread(new DataSender((RRQFile) pacote,address,port));
+                nThreads++;
                 ds.start();
                 break;
             case 3: //WRQFile

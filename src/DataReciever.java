@@ -16,16 +16,19 @@ class DataReciever implements Runnable {
     private String newFileName;
     private long fileSize;
     private final int datablock = 1191;
-    private final int timeOut = 10000;
+    private final int timeOut = 100;
+    private int nBloco;
+    private String xD;
 
     public DataReciever(InetAddress address,int serverPort,String fileName,String newFileName,long fileSize) throws SocketException{
         this.address=address;
         this.port=serverPort;
         this.socket = new DatagramSocket();
-        //this.socket.setSoTimeout(timeOut);
+        this.socket.setSoTimeout(timeOut);
         this.fileName=fileName;
         this.newFileName = newFileName;
         this.fileSize=fileSize;
+        this.nBloco=-1;
     }
 
     public void sendPacket(Pacote p) throws IOException {
@@ -38,6 +41,8 @@ class DataReciever implements Runnable {
         WRQFile pacote;
         do {
             sendPacket(new RRQFile(fileName));
+            RRQFile dsadsa = new RRQFile(fileName);
+            this.xD= dsadsa.getFileName();
         } while ((pacote=getWRQ())==null);
         return pacote.getNBlocos();
     }
@@ -47,19 +52,12 @@ class DataReciever implements Runnable {
         DatagramPacket packet = new DatagramPacket(buf, buf.length);
         try {
             socket.receive(packet);
-            System.out.println("address: " + address + " | port: " + port);
-            for(int j = 0; j < 10; j++)
-                System.out.println("[" + j + "]: " + buf[j]);
             if(buf[0] == (byte) 3){
                 this.address = packet.getAddress();
                 this.port = packet.getPort();
-                sendPacket(new ACK(1));
                 return new WRQFile(buf);
             }
-            else {
-                System.out.println("é null?");
-                return null;
-            }
+            else return null;
         }
         catch (SocketTimeoutException e) {
             return null;
@@ -67,11 +65,9 @@ class DataReciever implements Runnable {
     }
 
     public byte[] buildFileContent(List<byte[]> l, Long filesize){
-        System.out.println("filesize: " + filesize);
         byte[] fileContent = new byte[Math.toIntExact(filesize)];
 
         for(int i = 0; i < l.size(); i++){
-            System.out.println("DATA(" + i + " ): " + l.get(i).length);
             System.arraycopy(l.get(i), 0, fileContent, i * datablock, l.get(i).length);
         }
 
@@ -80,35 +76,41 @@ class DataReciever implements Runnable {
 
 
     public void writeToFile(File file, byte[] buf) throws FileNotFoundException, IOException{
-        System.out.println("newfile: " + file.getAbsolutePath());
         OutputStream os = new FileOutputStream(file);
         os.write(buf);
         os.close();
     }
 
-    public void writeFile(File f, int nrblocks, Long filesize)throws FileNotFoundException, IOException{
+    public void writeFile(File f, int nrblocks, Long filesize) throws IOException{
         List<byte[]> list = new ArrayList<>();
 
-        System.out.println("Nr blocos: " + nrblocks);
-        for(int i = 0; i < nrblocks; i++){
-            byte[] buf = new byte[1200];
+        boolean sendACK = true;
+        while (true) {
+            if(sendACK){  //Caso na iteração anterior tenha recebido o pacote errado, não vai enviar ack
+                sendPacket(new ACK(nBloco)); //Enviar o ack para desbloquear o DataSender
+            } else sendACK=true;
+            nBloco++;
+            if((nrblocks)==nBloco) break; //Caso seja o ultimo pacote sai do ciclo
+
+
+            byte[] buf = new byte[1200]; //Receber pacote
             DatagramPacket packet = new DatagramPacket(buf, buf.length);
 
-            System.out.println(i + ": antes");
-            this.socket.receive(packet);
-            System.out.println("depois");
-            this.port=packet.getPort();
-            this.address=packet.getAddress();
-
-            sendPacket(new ACK(i));
-            byte[] blockSize = new byte[4];
-            System.arraycopy(buf, 5, blockSize, 0, 4);
-            int bSize = ByteBuffer.wrap(blockSize).getInt();
-            byte[] tmp = new byte[bSize];
-            System.arraycopy(buf, 9, tmp, 0, bSize);
-            list.add(tmp);
+            try { //Caso de sucesso
+                this.socket.receive(packet); //Receber pacote
+                if (buf[0] == 4) { //Verifica se é um pacote de DATA
+                    DATA pacote = new DATA(buf);
+                    if (pacote.getNBloco() == nBloco) { //Verifica se é o bloco desejado
+                        list.add(pacote.getConteudo()); //Guardar conteudo
+                    }
+                } else { //Caso de receber um pacote errado
+                    nBloco--;
+                    sendACK=false;
+                }
+            } catch (SocketTimeoutException ste){
+                nBloco--; //Vai repetir iteração para receber o pacote do bloco desta iteração
+            }
         }
-        System.out.println("depois de ti");
 
         byte[] fileContent = buildFileContent(list, filesize);
         writeToFile(f, fileContent);
