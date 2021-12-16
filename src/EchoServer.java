@@ -94,6 +94,7 @@ public class EchoServer extends Thread {
             case 7://FIN
                 System.out.println("Packet recieved FIN");
                 running=false;
+                break;
             case 8://ServerFolderName
                 System.out.println("Packet recieved ServerFolderName");
                 break;
