@@ -9,6 +9,7 @@ public class EchoServer extends Thread {
     private final DatagramSocket socket;
     boolean running = true;
     public File folder;
+    List<Thread> threads = new ArrayList<>();
     public int nThreads=0;
 
     public EchoServer(DatagramSocket socket,File folder) throws SocketException{
@@ -80,6 +81,7 @@ public class EchoServer extends Thread {
                 Thread ds = new Thread(new DataSender((RRQFile) pacote,address,port));
                 nThreads++;
                 ds.start();
+                threads.add(ds);
                 break;
             case 3: //WRQFile
                 System.out.println("WRQFile");
@@ -111,6 +113,13 @@ public class EchoServer extends Thread {
                 analisePacket(buf, packet.getAddress(), packet.getPort());
             } catch (IOException fnfe) {
                 fnfe.printStackTrace();
+            }
+        }
+        for (Thread t: threads) {
+            try {
+                t.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         }
         socket.close();
