@@ -13,7 +13,7 @@ class DataSender implements Runnable {
     private final int port;
     private final InetAddress address;
     private String fileName;
-    private final int datablock = 1191;
+    private final int datablock = 1187;
 
     public DataSender(RRQFile rrqFile,InetAddress address,int port) throws SocketException {
         this.address=address;
@@ -45,6 +45,7 @@ class DataSender implements Runnable {
         DatagramPacket packet = new DatagramPacket(buf, buf.length);
         try {
             socket.receive(packet);
+            Pacote p = new Pacote(buf);
             if(buf[0]!=5){
                 return -2;
             } else {

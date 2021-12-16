@@ -15,7 +15,7 @@ class DataReciever implements Runnable {
     private String fileName;
     private String newFileName;
     private long fileSize;
-    private final int datablock = 1191;
+    private final int datablock = 1187;
     private final int timeOut = 100;
     private int nBloco;
 
@@ -32,7 +32,8 @@ class DataReciever implements Runnable {
 
     public void sendPacket(Pacote p) throws IOException {
         byte[] buf = p.getContent();
-        DatagramPacket packet = new DatagramPacket(buf, buf.length, address, port);
+        System.out.println("Length:"+ buf.length);
+        DatagramPacket packet = new DatagramPacket(buf,buf.length, address, port);
         socket.send(packet);
     }
 
@@ -95,14 +96,16 @@ class DataReciever implements Runnable {
 
             try { //Caso de sucesso
                 this.socket.receive(packet); //Receber pacote
-                if (buf[0] == 4) { //Verifica se é um pacote de DATA
-                    DATA pacote = new DATA(buf);
+                DATA pacote = new DATA(buf);
+                if (pacote.verificaIntegridade()) { //Verifica se é um pacote de DATA intacto
                     if (pacote.getNBloco() == nBloco) { //Verifica se é o bloco desejado
                         list.add(pacote.getConteudo()); //Guardar conteudo
+                    } else {
+                        nBloco--;
+                        sendACK=false;
                     }
                 } else { //Caso de receber um pacote errado
                     nBloco--;
-                    sendACK=false;
                 }
             } catch (SocketTimeoutException ste){
                 nBloco--; //Vai repetir iteração para receber o pacote do bloco desta iteração

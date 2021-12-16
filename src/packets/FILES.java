@@ -5,12 +5,14 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
 public class FILES extends Pacote{
     public FILES(byte[] bytes) {
         super(bytes);
+        offSet= Arrays.hashCode(bytes);
     }
     public FILES(Map<String, Long> m){
         super(1200);  // mudar depois
@@ -44,5 +46,6 @@ public class FILES extends Pacote{
         buf[pos] = -1;    
         
         System.arraycopy(buf, 0, this.bytes, 0, buf.length);
+        offSet= Arrays.hashCode(bytes);
     }
 }

@@ -1,10 +1,12 @@
 package packets;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 
 public class RRQFolder extends Pacote {
     public RRQFolder(byte[] bytes) {
         super(bytes);
+        offSet= Arrays.hashCode(bytes);
     }
 
     public RRQFolder(String folder) {
@@ -13,6 +15,7 @@ public class RRQFolder extends Pacote {
         byte[] fArray = folder.getBytes(StandardCharsets.UTF_8);
         System.arraycopy(fArray, 0, this.bytes, 1, fArray.length);
         this.bytes[this.bytes.length - 1] = 0;
+        offSet= Arrays.hashCode(bytes);
     }
 
     public String getFolderName(){

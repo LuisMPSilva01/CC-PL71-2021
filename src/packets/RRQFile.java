@@ -2,10 +2,12 @@ package packets;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 
 public class RRQFile extends Pacote{
     public RRQFile(byte[] bytes) {
         super(bytes);
+        offSet= Arrays.hashCode(bytes);
     }
     public RRQFile(String file) {
         super(1+4+file.length());
@@ -16,6 +18,7 @@ public class RRQFile extends Pacote{
 
         byte[] fArray = file.getBytes(StandardCharsets.UTF_8);
         System.arraycopy(fArray, 0, bytes, 5, fArray.length);
+        offSet= Arrays.hashCode(bytes);
     }
     public int getStringSize() {
         byte[] tmp = new byte[4];

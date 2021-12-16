@@ -9,20 +9,25 @@ import java.util.Arrays;
 
 public class Pacote {
     byte[] bytes;
+    int offSet=0;
 
     public Pacote(int size) {
         bytes = new byte[size];
     }
     public Pacote(byte[] bytes) {
         this.bytes = bytes.clone();
+        offSet=Arrays.hashCode(bytes);
     }
 
     public String toString(){
         return Arrays.toString(bytes);
     }
-
+    public int getOffSet() {return offSet;}
     public byte[] getContent(){
-        return bytes.clone();
+        return bytes;
+    }
+    public void setContent(byte[] newArray){
+        this.bytes=newArray;
     }
 
     public byte[] intToBytes(int n) {

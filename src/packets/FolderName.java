@@ -2,10 +2,12 @@ package packets;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 
 public class FolderName extends Pacote {
     public FolderName(byte[] bytes) {
         super(bytes);
+        offSet= Arrays.hashCode(bytes);
     }
 
     public FolderName(String folder,int nFilesBlocks) {
@@ -21,6 +23,7 @@ public class FolderName extends Pacote {
         byte[] fArray = folder.getBytes(StandardCharsets.UTF_8);
         System.arraycopy(fArray, 0, this.bytes, 9, fArray.length);
         this.bytes[this.bytes.length - 1] = 0;
+        offSet= Arrays.hashCode(bytes);
     }
     public int getFilesBlocks() {
         byte[] tmp = new byte[4];

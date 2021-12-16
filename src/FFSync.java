@@ -1,15 +1,10 @@
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.*;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.DateFormat;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Locale;
@@ -54,7 +49,7 @@ public class FFSync {
         */
 
         int defaultPort=8888;
-        int SO = 1; //SO==0 LINUX || ELSE WINDOWS
+        int SO = 0; //SO==0 LINUX || ELSE WINDOWS
         long startSize = Files.walk(Paths.get(args[0])) //Get folder starting size
                 .filter(p -> p.toFile().isFile())
                 .mapToLong(p -> p.toFile().length())
