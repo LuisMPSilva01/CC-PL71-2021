@@ -105,13 +105,17 @@ public class EchoServer extends Thread {
     }
 
     public void run() {
+        int misses=0;
         while (running) {
             byte[] buf = new byte[1200];
             DatagramPacket packet = new DatagramPacket(buf, buf.length);
             try {
+                if(misses==10)break; //IN CASE FIN IS LOST
                 this.socket.receive(packet);
                 analisePacket(buf, packet.getAddress(), packet.getPort());
+                misses=0;
             } catch (IOException fnfe) {
+                misses++;
                 fnfe.printStackTrace();
             }
         }

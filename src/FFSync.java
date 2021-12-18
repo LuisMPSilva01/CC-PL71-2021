@@ -1,7 +1,11 @@
+import packets.Pacote;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.*;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.DateFormat;
@@ -12,33 +16,66 @@ import java.util.Scanner;
 
 
 public class FFSync {
-    private static boolean netIsAvailable() {
-        try {
-            URL url = new URL("https://www.google.com");
-            URLConnection conn = url.openConnection();
-            conn.connect();
-            conn.getInputStream().close();
-            return true;
-        } catch (MalformedURLException e) {
-            throw new RuntimeException(e);
-        } catch (IOException e) {
-            return false;
+
+    public static boolean isReachable(String[] args) throws IOException {
+        for (int i=1;i<args.length;i++){ //Verificação de conexão
+            InetAddress inet=InetAddress.getByName(args[i]);
+            if(!inet.isReachable(500)){
+                System.out.println("The following ip address is unreachable:" + args[i]);
+                return false;
+            }
+        }
+        return true;
+    }
+    public static boolean passwordIsValida(String password){
+        boolean valid = true;
+        char[] array= password.toCharArray();
+        if(array.length>= 50) return false;
+
+        for (char character: password.toCharArray()) {
+            valid = !Character.isDigit(character);
+            if (!valid) {
+                break;
+            }
+        }
+        return valid;
+    }
+    public static boolean verificaPassword(DatagramSocket socket,InetAddress address,int port) throws IOException {
+        Scanner sc= new Scanner(System.in);
+
+        byte[] bytes = new byte[50];
+        DatagramPacket pacote = new DatagramPacket(bytes,50,address,port);
+
+        while (true){
+            System.out.println("Ensira a password (tamanho maximo 50, não digite números): ");
+            String password = sc.next();
+            if(passwordIsValida(password)){
+                bytes=password.getBytes(StandardCharsets.UTF_8);
+                socket.send(pacote);
+                socket.receive(pacote);
+
+                String recebido = new String(bytes);
+                if(password.equals(recebido)){
+                    socket.send(pacote); //Enviar extras para confirmar que o parceiro recebe
+                    socket.send(pacote); //Enviar extras para confirmar que o parceiro recebe
+                    socket.send(pacote); //Enviar extras para confirmar que o parceiro recebe
+                    return true;
+                }
+                else {
+                    System.out.println("Password errada, tente outra vez");
+                }
+            } else{
+                System.out.println("Formato errado, tente outra vez");
+            }
         }
     }
 
     public static void main(String[] args) throws IOException {
+        if(!isReachable(args)) return;
 
         //Start of verificação de password
-        /*
-        Scanner sc= new Scanner(System.in);
-        String password;
-        do {
-            System.out.println("Ensira a password: ");
-            password = sc.next();                     //Somos rewarded por perguntar ao peer qual é password?
-        } while (password.equals("arroz\n"));
+
         //end of verificação de password
-    */
-        Date start = new Date(); //Hora de começo
         /*
         if(args.length!=2){
             System.out.println("Formato errado, tente : FFSync pasta1 10.1.1.1");
@@ -56,8 +93,10 @@ public class FFSync {
                 .sum();
 
         try {
+            Date start = new Date(); //Hora de começo
             if(args.length==2) { //Cenario normal
                 DatagramSocket socket = new DatagramSocket(defaultPort);
+                verificaPassword(socket,InetAddress.getByName(args[1]),defaultPort);
                 Thread servidor = new Thread(new EchoServer(socket,new File(args[0])));
                 servidor.start();
 
@@ -96,22 +135,19 @@ public class FFSync {
                 servidor2.join();
                 cliente2.join();
             }
-        } catch (SocketException | InterruptedException e) {
-            System.out.println("Porta em uso, tente novamente mais tarde");
-        }
 
-        ////Start of Logs
-        Date finish = new Date();
-        long timeTaken = finish.getTime()-start.getTime();
-        long endSize = Files.walk(Paths.get(args[0])) //Get folder ending size
-                .filter(p -> p.toFile().isFile())
-                .mapToLong(p -> p.toFile().length())
-                .sum();
-        long dataTransferida = endSize-startSize;
-        DateFormat DFormat = DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG, Locale.getDefault()); //Date format
+            ////Start of Logs
+            Date finish = new Date();
+            long timeTaken = finish.getTime()-start.getTime();
+            long endSize = Files.walk(Paths.get(args[0])) //Get folder ending size
+                    .filter(p -> p.toFile().isFile())
+                    .mapToLong(p -> p.toFile().length())
+                    .sum();
+            long dataTransferida = endSize-startSize;
+            DateFormat DFormat = DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG, Locale.getDefault()); //Date format
 
-        FileOutputStream fos = new FileOutputStream("logs", true);
-        fos.write(("INFO: FFSync "+ args[0] +" " + Arrays.toString(Arrays.copyOfRange(args, 1, args.length)) + "\n" +
+            FileOutputStream fos = new FileOutputStream("logs", true);
+            fos.write(("INFO: FFSync "+ args[0] +" " + Arrays.toString(Arrays.copyOfRange(args, 1, args.length)) + "\n" +
                 "Date: "+ DFormat.format(start) +"\n"+
                 "Time taken: " + (timeTaken) + " miliseconds\n" +
                 "StartSize: " + (startSize) + "\n" +
@@ -119,7 +155,10 @@ public class FFSync {
                 "Data transferida: " + dataTransferida + " bytes\n" +
                 "Bitrate: " + ((float)dataTransferida/timeTaken*1000) + " bytes/segundo\n" + //Como conseguir o débito real?
                 "-----------------------------------------------------\n").getBytes());
-        fos.close();
-        ////End of Logs
+            fos.close();
+            ////End of Logs
+        } catch (SocketException | InterruptedException e) {
+        System.out.println("Porta em uso, tente novamente mais tarde");
+        }
     }
 }

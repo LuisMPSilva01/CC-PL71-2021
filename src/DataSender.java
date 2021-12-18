@@ -78,6 +78,7 @@ class DataSender implements Runnable {
             do{
                 sendPacket(d, address, port); //Enviar pacote
                 if(i==nBlocos-1){ //Caso seja a ultima iteração
+                    socket.setSoTimeout(100);
                     repeticoes--;
                     if(repeticoes==0) break;
                 }
