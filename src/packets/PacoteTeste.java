@@ -1,12 +1,14 @@
 package packets;
 
 
+import java.nio.charset.StandardCharsets;
+
 public class PacoteTeste {
     public static void main(String[] args) {
-        byte[] bytes = new byte[2];
-        bytes[0]=1;
-        bytes[1]=10;
-        DATA pacote = new DATA(2,bytes);
-        System.out.println(pacote.verificaIntegridade());
+        byte[] bytes = new byte[100];
+        String password = "joaozito";
+        bytes= password.getBytes(StandardCharsets.UTF_8);
+
+        System.out.println(password.equals(new String(bytes)));
     }
 }

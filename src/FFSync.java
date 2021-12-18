@@ -1,10 +1,7 @@
-import packets.Pacote;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.*;
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -40,26 +37,26 @@ public class FFSync {
         }
         return valid;
     }
-    public static boolean verificaPassword(DatagramSocket socket,InetAddress address,int port) throws IOException {
+    public static void verificaPassword(DatagramSocket socket, InetAddress address, int port) throws IOException {
         Scanner sc= new Scanner(System.in);
-
-        byte[] bytes = new byte[50];
-        DatagramPacket pacote = new DatagramPacket(bytes,50,address,port);
 
         while (true){
             System.out.println("Ensira a password (tamanho maximo 50, não digite números): ");
             String password = sc.next();
             if(passwordIsValida(password)){
-                bytes=password.getBytes(StandardCharsets.UTF_8);
-                socket.send(pacote);
-                socket.receive(pacote);
+                byte[] bytesEnvio=password.getBytes(StandardCharsets.UTF_8);
+                DatagramPacket enviado = new DatagramPacket(bytesEnvio,bytesEnvio.length,address,port);
+                socket.send(enviado);
 
-                String recebido = new String(bytes);
-                if(password.equals(recebido)){
-                    socket.send(pacote); //Enviar extras para confirmar que o parceiro recebe
-                    socket.send(pacote); //Enviar extras para confirmar que o parceiro recebe
-                    socket.send(pacote); //Enviar extras para confirmar que o parceiro recebe
-                    return true;
+                byte[] bytesRecebidos = new byte[50];
+                DatagramPacket recebido = new DatagramPacket(bytesRecebidos,bytesRecebidos.length,address,port);
+                socket.receive(recebido);
+
+                if(password.equals(new String(bytesRecebidos))){
+                    socket.send(enviado); //Enviar extras para confirmar que o parceiro recebe
+                    socket.send(enviado); //Enviar extras para confirmar que o parceiro recebe
+                    socket.send(enviado); //Enviar extras para confirmar que o parceiro recebe
+                    return;
                 }
                 else {
                     System.out.println("Password errada, tente outra vez");
