@@ -37,6 +37,18 @@ public class FFSync {
         }
         return valid;
     }
+
+    public static byte[] retiraZeros(byte[] bytes){
+        int size = 0;
+        for (byte c:bytes){
+            if (c== (byte) 0) break;
+            else size++;
+        }
+        byte[] newArray = new byte[size];
+        System.arraycopy(bytes, 0, newArray, 0, size);
+        return bytes;
+    }
+
     public static void verificaPassword(DatagramSocket socket, InetAddress address, int port) throws IOException {
         Scanner sc= new Scanner(System.in);
 
@@ -52,7 +64,7 @@ public class FFSync {
                 DatagramPacket recebido = new DatagramPacket(bytesRecebidos,bytesRecebidos.length,address,port);
                 socket.receive(recebido);
 
-                if(password.equals(new String(bytesRecebidos))){
+                if(password.equals(new String(retiraZeros(bytesRecebidos)))){
                     socket.send(enviado); //Enviar extras para confirmar que o parceiro recebe
                     socket.send(enviado); //Enviar extras para confirmar que o parceiro recebe
                     socket.send(enviado); //Enviar extras para confirmar que o parceiro recebe
