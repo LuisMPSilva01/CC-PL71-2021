@@ -1,6 +1,7 @@
 package packets;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 public class WRQFile implements UDP_Packet{
     byte[] bytes;
@@ -8,14 +9,25 @@ public class WRQFile implements UDP_Packet{
         this.bytes=bytes.clone();
     }
     public WRQFile(int nblocks) {
-        bytes= new byte[1+4];
-        bytes[0] = 3;
+        bytes= new byte[1200];
+        bytes[4] = 3;
+
         byte[] blocos = ByteBuffer.allocate(4).putInt(nblocks).array();
-        System.arraycopy(blocos, 0, bytes, 1, blocos.length);
+        System.arraycopy(blocos, 0, bytes, 5, blocos.length);
+
+        byte[] hashcode = ByteBuffer.allocate(4).putInt(Arrays.hashCode(Arrays.copyOfRange(bytes, 4,1200))).array();
+        System.arraycopy(hashcode, 0, bytes, 0, 4); //Copiar o número do bloco
     }
+
     public int getNBlocos() {
         byte[] tmp = new byte[4];
-        System.arraycopy(this.bytes, 1, tmp, 0, 4);
+        System.arraycopy(this.bytes, 5, tmp, 0, 4);
+        return ByteBuffer.wrap(tmp).getInt();
+    }
+
+    public int getHashCode(){
+        byte[] tmp = new byte[4];
+        System.arraycopy(this.bytes, 0, tmp, 0, 4);
         return ByteBuffer.wrap(tmp).getInt();
     }
 
@@ -26,6 +38,7 @@ public class WRQFile implements UDP_Packet{
 
     @Override
     public boolean isOK() {
-        return 3 == bytes[0];
+        return 3 == bytes[4] &&
+                getHashCode() == Arrays.hashCode(Arrays.copyOfRange(bytes, 4,1200));
     }
 }

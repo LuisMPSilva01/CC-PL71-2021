@@ -1,6 +1,8 @@
 package packets;
 
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 
 public class RRQFolder implements UDP_Packet {
     byte[] bytes;
@@ -8,12 +10,18 @@ public class RRQFolder implements UDP_Packet {
         this.bytes = bytes.clone();
     }
 
-    public RRQFolder(String folder) {
-        bytes = new byte[1+folder.length()+1];
-        this.bytes[0] = 1;
-        byte[] fArray = folder.getBytes(StandardCharsets.UTF_8);
-        System.arraycopy(fArray, 0, this.bytes, 1, fArray.length);
-        this.bytes[this.bytes.length - 1] = 0;
+    public RRQFolder() {
+        bytes = new byte[1200];
+        this.bytes[4] = 1;
+
+        byte[] hashcode = ByteBuffer.allocate(4).putInt(Arrays.hashCode(Arrays.copyOfRange(bytes, 4,1200))).array();
+        System.arraycopy(hashcode, 0, bytes, 0, 4); //Copiar o número do bloco
+    }
+
+    public int getHashCode(){
+        byte[] tmp = new byte[4];
+        System.arraycopy(this.bytes, 0, tmp, 0, 4);
+        return ByteBuffer.wrap(tmp).getInt();
     }
 
     @Override
@@ -23,6 +31,7 @@ public class RRQFolder implements UDP_Packet {
 
     @Override
     public boolean isOK() {
-        return 1 == bytes[0];
+        return 1 == bytes[4] &&
+                getHashCode() == Arrays.hashCode(Arrays.copyOfRange(bytes, 4,1200));
     }
 }

@@ -176,7 +176,7 @@ public class EchoClient extends Thread{
         Map<String, Long> m = new HashMap<>();
         getFilesInFolder(m, folder, "");
 
-        RRQFolder rrqf = new RRQFolder(folder.getAbsolutePath());
+        RRQFolder rrqf = new RRQFolder();
         try{
             FILES files;
             files=waitFILESandName(rrqf);
