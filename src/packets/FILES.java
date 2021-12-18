@@ -1,23 +1,16 @@
 package packets;
 
-import java.io.IOError;
-import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 
-public class FILES extends Pacote{
+public class FILES implements UDP_Packet{
+    byte[] bytes;
     public FILES(byte[] bytes) {
-        super(bytes);
-        offSet= Arrays.hashCode(bytes);
+        this.bytes=bytes.clone();
     }
     public FILES(Map<String, Long> m){
-        super(1200);  // mudar depois
-        byte[] buf = new byte[1200];
-        buf[0] = 6;
+        bytes= new byte[1200];  // mudar depois
+        bytes[0] = 6;
         int pos = 1;
 
         /*
@@ -36,16 +29,37 @@ public class FILES extends Pacote{
             byte[] size_filename = intToBytes(filename.length);
             byte[] filesize = longToBytes(entry.getValue());
 
-            System.arraycopy(size_filename, 0, buf, pos, 4);
+            System.arraycopy(size_filename, 0, bytes, pos, 4);
             pos += 4;
-            System.arraycopy(filename, 0, buf, pos, filename.length);
+            System.arraycopy(filename, 0, bytes, pos, filename.length);
             pos += filename.length;
-            System.arraycopy(filesize, 0, buf, pos, 8);
+            System.arraycopy(filesize, 0, bytes, pos, 8);
             pos += 8;
         }
-        buf[pos] = -1;    
-        
-        System.arraycopy(buf, 0, this.bytes, 0, buf.length);
-        offSet= Arrays.hashCode(bytes);
+        bytes[pos] = -1;
+    }
+
+    @Override
+    public byte[] getContent(){
+        return bytes.clone();
+    }
+
+    public byte[] intToBytes(int n) {
+        return ByteBuffer.allocate(4).putInt(n).array();
+    }
+
+    public byte[] longToBytes(Long l) {
+        ByteBuffer buf = ByteBuffer.allocate(Long.BYTES);
+        buf.putLong(l);
+        return buf.array();
+    }
+
+    public int getNbloco(){
+        return 0;
+    }
+
+    @Override
+    public boolean isOK() {
+        return 6==bytes[0];
     }
 }

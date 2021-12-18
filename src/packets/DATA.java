@@ -3,9 +3,10 @@ package packets;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
-public class DATA extends Pacote{
+public class DATA implements UDP_Packet{
+    byte[] bytes;
     public DATA(int nBloco,byte[] data) {
-        super(1 + 4 + 4 + 4+data.length);
+        bytes = new byte[1+4+4+4+ data.length];
         bytes[4] = 4;
 
         byte[] blocos = ByteBuffer.allocate(4).putInt(nBloco).array();
@@ -20,8 +21,7 @@ public class DATA extends Pacote{
     }
 
     public DATA(byte[] bytes) {
-        super(bytes);
-        offSet= Arrays.hashCode(bytes);
+        this.bytes=bytes.clone();
     }
     public int getHashCode(){
         byte[] tmp = new byte[4];
@@ -46,9 +46,14 @@ public class DATA extends Pacote{
         return tmp;
     }
 
-    public boolean verificaIntegridade(){
-        System.out.println(getHashCode());
-        System.out.println();
-        return  this.bytes[4]==4 && getHashCode() == Arrays.hashCode(Arrays.copyOfRange(bytes, 4,1 + 4 + 4 + 4+getblockSize()));
+    @Override
+    public byte[] getContent(){
+        return bytes.clone();
+    }
+
+    @Override
+    public boolean isOK() {
+        return  this.bytes[4]==4
+                && getHashCode() == Arrays.hashCode(Arrays.copyOfRange(bytes, 4,1+4+4+4+getblockSize()));
     }
 }

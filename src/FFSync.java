@@ -81,11 +81,8 @@ public class FFSync {
     }
 
     public static void main(String[] args) throws IOException {
-        if(!isReachable(args)) return;
 
-        //Start of verificação de password
-
-        //end of verificação de password
+        //if(!isReachable(args)) return;
         /*
         if(args.length!=2){
             System.out.println("Formato errado, tente : FFSync pasta1 10.1.1.1");
@@ -96,17 +93,18 @@ public class FFSync {
         */
 
         int defaultPort=8888;
-        int SO = 0; //SO==0 LINUX || ELSE WINDOWS
+        int SO = 1; //SO==0 LINUX || ELSE WINDOWS
         long startSize = Files.walk(Paths.get(args[0])) //Get folder starting size
                 .filter(p -> p.toFile().isFile())
                 .mapToLong(p -> p.toFile().length())
                 .sum();
 
         try {
-            Date start = new Date(); //Hora de começo
+            Date start;
             if(args.length==2) { //Cenario normal
                 DatagramSocket socket = new DatagramSocket(defaultPort);
                 verificaPassword(socket,InetAddress.getByName(args[1]),defaultPort);
+                start = new Date(); //Hora de começo
                 Thread servidor = new Thread(new EchoServer(socket,new File(args[0])));
                 servidor.start();
 
@@ -116,6 +114,7 @@ public class FFSync {
                 servidor.join();
                 cliente.join();
             } else { //Cenario de teste
+                start = new Date(); //Hora de começo
                 File folder1,folder2;
                 if (SO==0){
                     folder1 = new File("/home/ray/Downloads/teste3");

@@ -8,8 +8,8 @@ import packets.*;
 public class EchoServer extends Thread {
     private final DatagramSocket socket;
     boolean running = true;
-    public File folder;
-    List<Thread> threads = new ArrayList<>();
+    private final File folder;
+    private final List<Thread> threads = new ArrayList<>();
     public int nThreads=0;
 
     public EchoServer(DatagramSocket socket,File folder) throws SocketException{
@@ -17,7 +17,7 @@ public class EchoServer extends Thread {
         this.folder= folder;
     }
 
-    public void sendPacket(Pacote p, InetAddress address, int port) throws IOException {
+    public void sendPacket(UDP_Packet p, InetAddress address, int port) throws IOException {
         byte[] buf = p.getContent();
         DatagramPacket packet = new DatagramPacket(buf, buf.length, address, port);
         socket.send(packet);
@@ -55,11 +55,11 @@ public class EchoServer extends Thread {
         DatagramPacket packet = new DatagramPacket(buf, buf.length);
         try {
             socket.receive(packet);
-            if(buf[0]!=5){
-                return -2;
-            } else {
-                ACK ack = new ACK(buf);
+            ACK ack = new ACK(buf);
+            if(ack.isOK()){
                 return ack.getNBloco();
+            } else {
+                return -2;
             }
         }
         catch (SocketTimeoutException e) {
@@ -68,55 +68,42 @@ public class EchoServer extends Thread {
     }
 
     public void analisePacket(byte[] array, InetAddress address, int port) throws IOException {
-        Pacote pacote;
-        switch (array[0]) {
-            case 1://RRQFolder
-                System.out.println("RRQFolder");
-                sendFolderName(address,port);
-                sendFILES(address, port);
-                break;
-            case 2://RRQFile
-                System.out.println("RRQFile");
-                pacote=new RRQFile(array);
-                Thread ds = new Thread(new DataSender((RRQFile) pacote,address,port));
+        if((new RRQFolder(array)).isOK()){
+            System.out.println("Packet recieved RRQFolder");
+            sendFolderName(address,port);
+            sendFILES(address, port);
+            this.socket.setSoTimeout(2000); // Sendo o RRQFolder pode ser a ultima operação depois do FIN, este timeout vai fazer com que o servidor feche caso o fin se perca
+        } else{
+            if ((new RRQFile(array)).isOK()){
+                System.out.println("Packet recieved RRQFile");
+                RRQFile pacote =new RRQFile(array);
+                Thread ds = new Thread(new DataSender(pacote,address,port));
                 nThreads++;
                 ds.start();
                 threads.add(ds);
-                break;
-            case 3: //WRQFile
-                System.out.println("WRQFile");
-            case 4: //DATA
-                System.out.println("DATA");
-            case 5://ACK
-                System.out.println("ACK");
-                break;
-            case 6://FILES
-                System.out.println("Packet recieved FILES");
-                break;
-            case 7://FIN
-                System.out.println("Packet recieved FIN");
-                running=false;
-                break;
-            case 8://ServerFolderName
-                System.out.println("Packet recieved ServerFolderName");
-                break;
-            default:
+            } else {
+                if ((new FIN(array)).isOK()){
+                    System.out.println("Packet recieved FIN");
+                    running=false;
+                } else System.out.println("Pacote recebido ignorado");
+            }
         }
     }
 
     public void run() {
-        int misses=0;
         while (running) {
-            byte[] buf = new byte[1200];
-            DatagramPacket packet = new DatagramPacket(buf, buf.length);
             try {
-                if(misses==10)break; //IN CASE FIN IS LOST
-                this.socket.receive(packet);
+                byte[] buf = new byte[1200];
+                DatagramPacket packet = new DatagramPacket(buf, buf.length);
+                try {
+                    this.socket.receive(packet);
+                }catch (SocketTimeoutException ste) {
+                    System.out.println("Took to long to recieve fin");
+                    break;
+                }
                 analisePacket(buf, packet.getAddress(), packet.getPort());
-                misses=0;
-            } catch (IOException fnfe) {
-                misses++;
-                fnfe.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
         for (Thread t: threads) {

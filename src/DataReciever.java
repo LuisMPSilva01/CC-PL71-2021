@@ -2,27 +2,24 @@ import packets.*;
 
 import java.io.*;
 import java.net.*;
-import java.nio.ByteBuffer;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
 
 class DataReciever implements Runnable {
-    private DatagramSocket socket;
+    private final DatagramSocket socket;
     private int port;
     private InetAddress address;
-    private String fileName;
-    private String newFileName;
-    private long fileSize;
-    private final int datablock = 1187;
-    private final int timeOut = 100;
+    private final String fileName;
+    private final String newFileName;
+    private final long fileSize;
     private int nBloco;
 
     public DataReciever(InetAddress address,int serverPort,String fileName,String newFileName,long fileSize) throws SocketException{
         this.address=address;
         this.port=serverPort;
         this.socket = new DatagramSocket();
+        int timeOut = 100;
         this.socket.setSoTimeout(timeOut);
         this.fileName=fileName;
         this.newFileName = newFileName;
@@ -30,7 +27,7 @@ class DataReciever implements Runnable {
         this.nBloco=-1;
     }
 
-    public void sendPacket(Pacote p) throws IOException {
+    public void sendPacket(UDP_Packet p) throws IOException {
         byte[] buf = p.getContent();
         System.out.println("Length:"+ buf.length);
         DatagramPacket packet = new DatagramPacket(buf,buf.length, address, port);
@@ -48,12 +45,14 @@ class DataReciever implements Runnable {
     public WRQFile getWRQ() throws IOException {
         byte[] buf = new byte[1200];
         DatagramPacket packet = new DatagramPacket(buf, buf.length);
+
         try {
             socket.receive(packet);
-            if(buf[0] == (byte) 3){
+            WRQFile pacote = new WRQFile(buf);
+            if(pacote.isOK()){
                 this.address = packet.getAddress();
                 this.port = packet.getPort();
-                return new WRQFile(buf);
+                return pacote;
             }
             else return null;
         }
@@ -66,6 +65,7 @@ class DataReciever implements Runnable {
         byte[] fileContent = new byte[Math.toIntExact(filesize)];
 
         for(int i = 0; i < l.size(); i++){
+            int datablock = 1187;
             System.arraycopy(l.get(i), 0, fileContent, i * datablock, l.get(i).length);
         }
 
@@ -73,7 +73,7 @@ class DataReciever implements Runnable {
     }
 
 
-    public void writeToFile(File file, byte[] buf) throws FileNotFoundException, IOException{
+    public void writeToFile(File file, byte[] buf) throws IOException{
         OutputStream os = new FileOutputStream(file);
         os.write(buf);
         os.close();
@@ -97,12 +97,12 @@ class DataReciever implements Runnable {
             try { //Caso de sucesso
                 this.socket.receive(packet); //Receber pacote
                 DATA pacote = new DATA(buf);
-                if (pacote.verificaIntegridade()) { //Verifica se é um pacote de DATA intacto
+                if (pacote.isOK()) { //Verifica se é um pacote de DATA intacto
                     if (pacote.getNBloco() == nBloco) { //Verifica se é o bloco desejado
                         list.add(pacote.getConteudo()); //Guardar conteudo
                     } else {
-                        nBloco--;
                         sendACK=false;
+                        nBloco--;
                     }
                 } else { //Caso de receber um pacote errado
                     nBloco--;

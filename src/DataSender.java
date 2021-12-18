@@ -4,15 +4,13 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.*;
-import java.nio.file.Files;
-import java.util.Arrays;
 
 
 class DataSender implements Runnable {
-    private DatagramSocket socket;
+    private final DatagramSocket socket;
     private final int port;
     private final InetAddress address;
-    private String fileName;
+    private final String fileName;
     private final int datablock = 1187;
 
     public DataSender(RRQFile rrqFile,InetAddress address,int port) throws SocketException {
@@ -22,7 +20,7 @@ class DataSender implements Runnable {
         this.fileName=rrqFile.getFileName();
     }
 
-    public void sendPacket(Pacote p, InetAddress address, int port) throws IOException {
+    public void sendPacket(UDP_Packet p, InetAddress address, int port) throws IOException {
         byte[] buf = p.getContent();
         DatagramPacket packet = new DatagramPacket(buf, buf.length, address, port);
         socket.send(packet);
@@ -45,12 +43,12 @@ class DataSender implements Runnable {
         DatagramPacket packet = new DatagramPacket(buf, buf.length);
         try {
             socket.receive(packet);
-            Pacote p = new Pacote(buf);
-            if(buf[0]!=5){
-                return -2;
-            } else {
+            ACK pacote = new ACK(buf);
+            if(pacote.isOK()){
                 ACK ack = new ACK(buf);
                 return ack.getNBloco();
+            } else {
+                return -2;
             }
         }
         catch (SocketTimeoutException e) {
@@ -90,7 +88,6 @@ class DataSender implements Runnable {
     public void run(){
         try {
             File f = new File(this.fileName);
-            int filesize = (int) f.length();
             int nrBlocks = sendWRQ(f);
             sendFile(fileName,nrBlocks,address,port);
             this.socket.close();

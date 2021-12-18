@@ -4,7 +4,6 @@ import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.concurrent.TimeoutException;
 
 import packets.*;
 
@@ -14,7 +13,7 @@ public class EchoClient extends Thread{
     private final int defaultPort;
     private String serverFolder;
     private File folder;
-    private final int SO=0; //Linux -> 0 | Windows -> everything else
+    private final int SO=1; //Linux -> 0 | Windows -> everything else
 
 
     public EchoClient(int defaultPort,InetAddress address,File folder) throws SocketException{
@@ -25,7 +24,7 @@ public class EchoClient extends Thread{
         this.folder=folder;
     }
 
-    public void sendPacket(Pacote p) throws IOException {
+    public void sendPacket(UDP_Packet p) throws IOException {
         byte[] buf = p.getContent();
         DatagramPacket packet = new DatagramPacket(buf, buf.length, address, defaultPort);
         socket.send(packet);
@@ -113,7 +112,7 @@ public class EchoClient extends Thread{
         }
     }
 
-    public FILES waitFILES(int nBlocos) throws IOException{
+    public FILES waitFILES(int nrBlocos) throws IOException{
         byte[] buf = new byte[1200];
         DatagramPacket packet = new DatagramPacket(buf, buf.length);
 
@@ -125,14 +124,20 @@ public class EchoClient extends Thread{
                 sendPacket(new ACK(nBloco)); //Enviar o ack para desbloquear o FILES
             } else sendACK=true;
             nBloco++;
+            //if((nrblocks)==nBloco) break; //Caso seja o ultimo pacote sai do ciclo
 
             try { //Caso de sucesso
                 this.socket.receive(packet); //Receber pacote
-                if (buf[0] == 6) { //Verifica se é um pacote de DATA
-                    sendPacket(new ACK(nBloco)); //Enviar o ack para desbloquear o FILES
-                    return new FILES(buf);
+                FILES pacote = new FILES(buf);
+                if (pacote.isOK()) { //Verifica se é um pacote de FILES
+                    if (pacote.getNbloco()==nBloco) {
+                        sendPacket(new ACK(nBloco)); //Enviar o ack para desbloquear o FILES
+                        return new FILES(buf);
+                    } else {
+                        sendACK=false;
+                        nBloco--;
+                    }
                 } else {
-                    sendACK=false;
                     nBloco--;
                 }
             } catch (SocketTimeoutException e) {
@@ -144,21 +149,20 @@ public class EchoClient extends Thread{
     public int waitFolderName(RRQFolder rrqf) throws IOException {
         byte[] buf = new byte[1200];
         DatagramPacket packet = new DatagramPacket(buf, buf.length);
+        FolderName fn;
         do { //Ciclo para esperar o pacote do folder name
             try {
                 sendPacket(rrqf);
                 this.socket.receive(packet);
             }catch (SocketTimeoutException ignored){}
-        } while (buf[0]!=8); //Verificação do pacote
+            fn = new FolderName(buf);
+        } while (!fn.isOK()); //Verificação do pacote
 
-        FolderName fn = new FolderName(buf);
         this.serverFolder = fn.getFolderName();
         return fn.getFilesBlocks();
     }
 
     public FILES waitFILESandName(RRQFolder rrqf){
-        byte[] buf = new byte[1200];
-        DatagramPacket packet = new DatagramPacket(buf, buf.length);
         try {
             int nBlocos=waitFolderName(rrqf); //Guarda o nome do folder
 
