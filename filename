@@ -1,0 +1,56 @@
+:- op( 900,xfy,'::' ).
+:- discontiguous (::)/2.
+
+
+
+servico(ortopedia,amelia).
+servico(obstetricia,ana).
+servico(obstetricia,mAria).
+servico(obstetricia,mariana).
+servico(geriatria,sofia).
+servico(geriatria,susana).
+servico(np9,zulmira).
+
+ato(penso,ana,joana,sabado).
+ato(gesso,amelia,jose,domingo).
+ato(x017,mariana,joaquina,domingo).
+ato(domicilio,maria,x121,x251).
+ato(sutura,x313,josue,segunda).
+
+
+excecao(servico(Serv,Enf)) :- servico(x007,Enf).
+excecao(servico(Serv,Enf)) :- servico(np9,Enf).
+excecao(ato(Ato,Enf,Ute,Data)) :- ato(x017,Enf,Ute,Data).
+excecao(ato(Ato,Enf,Ute,Data)) :- ato(Ato,Enf,x121,x251).
+excecao(ato(domicilio,susana,joao,segunda)).
+excecao(ato(domicilio,susana,jose,segunda)).
+excecao(ato(Ato,Enf,Ute,Data)) :- ato(Ato,x313,Ute,Data).
+excecao(ato(sutura,maria,josefa,terca)).
+excecao(ato(sutura,maria,josefa,sexta)).
+excecao(ato(sutura,mariana,josefa,terca)).
+excecao(ato(sutura,mariana,josefa,sexta)).
+excecao(ato(penso,ana,jacinta,X)) :-
+  X = segunda;
+  X = terca;
+  X = quarta;
+  X = quinta;
+  X = sexta.
+
+nulo(np9).
+
++servico(Serv,Enf) :: (findall( Serv , (servico(Serv,Enf) , not(nulo(Serv))) , S),
+                      length(S,N),
+                      N==0).
+
+
++servico(ato(Ato,Enf,Ute,Data)) :: (findall( Datas, ato(A,E,U,Datas), S ),
+                                    verificaFimDeSemana(S)).
+
+
+verificaFimDeSemana([]).
+verificaFimDeSemana([H|T]) :- H \== sabado ,  H \== domingo, verificaFimDeSemana(T).
+
+%como incluir as exclusoes?
+-servico(Serv,Enf) :: (findall( Uten , ato(Ato,Enf,Uten,Data), S),
+                       length(S,N),
+                       N == 0)

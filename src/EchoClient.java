@@ -13,7 +13,7 @@ public class EchoClient extends Thread{
     private final int defaultPort;
     private String serverFolder;
     private File folder;
-    private final int SO=0; //Linux -> 0 | Windows -> everything else
+    private final int SO=1; //Linux -> 0 | Windows -> everything else
 
 
     public EchoClient(int defaultPort,InetAddress address,File folder) throws SocketException{
@@ -106,8 +106,7 @@ public class EchoClient extends Thread{
                 String newFileName = myFolder.getAbsolutePath() + "/" + entry.getKey();
                 System.out.println("new Filename: " + newFileName);
                 System.out.println("Filename: " + fileName);
-                Long fileSize = entry.getValue().getA();
-                missingFiles[i] = new Thread(new DataReciever(address, defaultPort, fileName, newFileName, fileSize));
+                missingFiles[i] = new Thread(new DataReciever(address, defaultPort, fileName, newFileName));
                 missingFiles[i].start();
                 i++;
             }
@@ -115,8 +114,7 @@ public class EchoClient extends Thread{
             for(Map.Entry<String, LongTuple> entry: missing.entrySet()){
                 String fileName = serverFolder + "\\" + entry.getKey();
                 String newFileName = myFolder.getAbsolutePath() + "\\" + entry.getKey();
-                Long fileSize = entry.getValue().getA();
-                missingFiles[i] = new Thread(new DataReciever(address, defaultPort, fileName, newFileName, fileSize));
+                missingFiles[i] = new Thread(new DataReciever(address, defaultPort, fileName, newFileName));
                 missingFiles[i].start();
                 i++;
             }

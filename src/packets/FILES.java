@@ -1,6 +1,5 @@
 package packets;
 
-import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.Map;
 

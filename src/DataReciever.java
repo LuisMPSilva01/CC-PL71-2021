@@ -2,8 +2,8 @@ import packets.*;
 
 import java.io.*;
 import java.net.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 
 class DataReciever implements Runnable {
@@ -12,18 +12,13 @@ class DataReciever implements Runnable {
     private InetAddress address;
     private final String fileName;
     private final String newFileName;
-    private final long fileSize;
-    private int nBloco;
 
-    public DataReciever(InetAddress address,int serverPort,String fileName,String newFileName,long fileSize) throws SocketException{
+    public DataReciever(InetAddress address,int serverPort,String fileName,String newFileName) throws SocketException{
         this.address=address;
         this.port=serverPort;
         this.socket = new DatagramSocket();
-        //this.socket.setSoTimeout(1000);
         this.fileName=fileName;
         this.newFileName = newFileName;
-        this.fileSize=fileSize;
-        this.nBloco=-1;
     }
 
     public void sendPacket(UDP_Packet p) throws IOException {
@@ -60,48 +55,34 @@ class DataReciever implements Runnable {
         }
     }
 
-    public byte[] buildFileContent(byte[][] ficheiro, Long filesize){
-        byte[] fileContent = new byte[Math.toIntExact(filesize)];
-
-        for(int i = 0; i < ficheiro.length ; i++){
-            int datablock = 1187;
-            System.arraycopy(ficheiro[i], 0, fileContent, i * datablock, ficheiro[i].length);
+    public boolean containsBlock(Queue<DataPlusBlock> queue, int nBloco){
+        for(DataPlusBlock dpb : queue){
+            if (dpb.getBlock()==nBloco) return true;
         }
-
-        return fileContent;
+        return false;
     }
 
-
-    public void writeToFile(File file, byte[] buf) throws IOException{
-        OutputStream os = new FileOutputStream(file);
-        os.write(buf);
-        os.close();
-    }
-
-    public int returnIndex(List<Integer> lista,int target){
-        int i=0;
-        for (int c:lista){
-            if (c==target) return i;
-            i++;
-        }
-        return -1;
-    }
-
-    public void writeFile(File f, int nrblocks, Long filesize) throws IOException{
-        byte[][] ficheiro = new byte[nrblocks][];
-        for (int i=0;i<nrblocks;i++){
-            ficheiro[i] = new byte[1];
-        }
+    public void writeFile(int nrblocks) throws IOException{
         boolean sendFirst = true;
         socket.setSoTimeout(50);
 
         sendPacket(new ACK(-1));
-        List<Integer> missing = new ArrayList<>();
-        for (int i=0;i<nrblocks;i++){
-            missing.add(i);
-        }
-        while (!missing.isEmpty()) {
+        Queue<DataPlusBlock> waitingToWrite = new PriorityQueue<>();
+        int next=0;
+
+        File f = new File(newFileName);
+        FileOutputStream output = new FileOutputStream(f, true);
+        f.createNewFile(); //Unhandled
+
+        while (true) {
             try {
+                while (!(waitingToWrite.isEmpty()) && (waitingToWrite.element().getBlock()== next) ){
+                    output.write(waitingToWrite.remove().getData());
+                    output.flush();
+                    next++;
+                }
+                if (next==nrblocks) break;
+
                 byte[] buf = new byte[1200]; //Receber pacote
                 DatagramPacket packet = new DatagramPacket(buf, buf.length);
 
@@ -111,20 +92,16 @@ class DataReciever implements Runnable {
                     int blocoPacote = pacote.getNBloco();
                     sendFirst=false;
                     System.out.println("Bloco recebido:" + blocoPacote);
-                    int index;
                     sendPacket(new ACK(blocoPacote));
-                    if ((index=returnIndex(missing,blocoPacote))!=-1) {
-                        ficheiro[blocoPacote] = (pacote.getConteudo()); //Guardar conteudo
-                        missing.remove(index);
+                    if (blocoPacote>=next&&!containsBlock(waitingToWrite,blocoPacote)) {
+                        waitingToWrite.add(new DataPlusBlock(pacote.getConteudo(),blocoPacote));
                     }
                 }
             } catch (SocketTimeoutException ste){
                 if(sendFirst) sendPacket(new ACK(-1));
             }
         }
-
-        byte[] fileContent = buildFileContent(ficheiro, filesize);
-        writeToFile(f, fileContent);
+        output.close();
     }
 
 
@@ -132,8 +109,7 @@ class DataReciever implements Runnable {
     public void run(){
         try {
             int nrBlocks = sendRRQ();
-            File f = new File(newFileName);
-            writeFile(f, nrBlocks, fileSize);
+            writeFile(nrBlocks);
             this.socket.close();
         }
         catch (IOException e) {
