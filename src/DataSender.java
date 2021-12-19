@@ -107,7 +107,10 @@ class DataSender implements Runnable {
         Queue<Integer> sendQueue = new LinkedList<>();
         while (!windoh.isEmpty()) {  //Repetições vai ser usado na ultima iteração para quebrar o ciclo caso não receba o ultimo ack(pode ter sido perdido)
             while (!sendQueue.isEmpty()) {
-                sendDataBlock(sendQueue.remove(), ficheiro, address, port);
+                int nextValue = sendQueue.remove();
+                if (nextValue!=-1){
+                    sendDataBlock(nextValue, ficheiro, address, port);
+                }
             }
 
             try {

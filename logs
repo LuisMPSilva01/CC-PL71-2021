@@ -62,3 +62,19 @@ EndSize: 38879031
 Data transferida: 38877422 bytes
 Bitrate: 2.621539E7 bytes/segundo
 -----------------------------------------------------
+INFO: FFSync C:\\Users\\Acer\\Desktop\\teste1 [10.2.2.1, 10.3.2.1]
+Date: December 19, 2021 at 2:14:46 PM GMT
+Time taken: 1545 miliseconds
+StartSize: 0
+EndSize: 38879031
+Data transferida: 38879031 bytes
+Bitrate: 2.5164422E7 bytes/segundo
+-----------------------------------------------------
+INFO: FFSync C:\\Users\\Acer\\Desktop\\teste1 [10.2.2.1, 10.3.2.1]
+Date: December 19, 2021 at 2:25:04 PM GMT
+Time taken: 1363 miliseconds
+StartSize: 1609
+EndSize: 38879031
+Data transferida: 38877422 bytes
+Bitrate: 2.8523422E7 bytes/segundo
+-----------------------------------------------------
