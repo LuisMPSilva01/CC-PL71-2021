@@ -11,6 +11,7 @@ public class EchoServer extends Thread {
     private final File folder;
     private final List<Thread> threads = new ArrayList<>();
     public int nThreads=0;
+    public int sizeBlock = 1200;
 
     public EchoServer(DatagramSocket socket,File folder) throws SocketException{
         this.socket = socket;
@@ -23,22 +24,60 @@ public class EchoServer extends Thread {
         socket.send(packet);
     }
 
-    public static void getFilesInFolder(Map<String, Long> m, File folder, String path) {
+    public static void getFilesInFolder(Map<String, LongTuple> m, File folder, String path) {
         for (File fileEntry : Objects.requireNonNull(folder.listFiles())) {
             if (fileEntry.isDirectory()) {
                 getFilesInFolder(m, fileEntry,(path+fileEntry.getName()+"||"));
             } else {
-                m.put(path + fileEntry.getName(), fileEntry.length());
+                LongTuple lt = new LongTuple(fileEntry.length(), fileEntry.lastModified());
+                m.put(path + fileEntry.getName(), lt);
             }
         }
     }
 
+    public int nrBlocksFILES(Map<String, LongTuple> map){
+        int block = 0;
+        int total = 9;
+
+        for(Map.Entry<String, LongTuple> entry: map.entrySet()){
+            if(sizeBlock > total + 4 + entry.getKey().length() + 8 + 8){
+                total += 4 + entry.getKey().length() + 8 + 8;
+            }
+            else{
+                block++;
+                total = 9 + 4 + entry.getKey().length() + 8 + 8;
+            }
+        }
+
+        return block + 1;
+    }
+
     public void sendFILES(InetAddress address, int port) throws IOException {
-        HashMap<String, Long> map = new HashMap<>();
+        Map<String, LongTuple> map = new HashMap<>();
         getFilesInFolder(map, folder, "");
+        int nrBlocksFILES = nrBlocksFILES(map);
+        int total = 9, block = 0;
+        Map<String, LongTuple> FILES = new HashMap<>();
 
-        FILES files = new FILES(map);
-
+        for(Map.Entry<String, LongTuple> entry: map.entrySet()){
+            if(sizeBlock > total + 4 + entry.getKey().length() + 8 + 8){
+                total += 4 + entry.getKey().length() + 8 + 8;
+                FILES.put(entry.getKey(), entry.getValue());
+            }
+            else{
+                //send packet
+                block++;
+                FILES files = new FILES(FILES, block, nrBlocksFILES);
+                do {
+                    sendPacket(files, address, port);
+                } while (waitACK()!=0);
+                FILES.clear();
+                total = 9 + 4 + entry.getKey().length() + 8 + 8;
+                FILES.put(entry.getKey(), entry.getValue());
+            }
+        }
+        block ++;
+        FILES files = new FILES(FILES, block, nrBlocksFILES);
         do {
             sendPacket(files, address, port);
         } while (waitACK()!=0);

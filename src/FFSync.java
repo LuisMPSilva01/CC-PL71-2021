@@ -116,7 +116,7 @@ public class FFSync {
             } else { //Cenario de teste
                 start = new Date(); //Hora de começo
                 File folder1,folder2;
-                if (SO==1){
+                if (SO==0){
                     folder1 = new File("/home/ray/Downloads/teste3");
                     folder2 = new File("/home/ray/Downloads/teste2");
                 }else {

@@ -1,5 +1,6 @@
 package packets;
 
+import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.Map;
 
@@ -8,32 +9,33 @@ public class FILES implements UDP_Packet{
     public FILES(byte[] bytes) {
         this.bytes=bytes.clone();
     }
-    public FILES(Map<String, Long> m){
-        bytes= new byte[1200];  // mudar depois
+    public FILES(Map<String, LongTuple> m, int nrBlock, int totalBlocks){
+        bytes= new byte[1200];
         bytes[0] = 6;
         int pos = 1;
 
-        /*
-        byte[] byteArray = ByteBuffer.allocate(4).putInt(bloco).array();
-        System.arraycopy(byteArray, 0, bytes, pos, 4); //block#
+        byte[] nrBloc = ByteBuffer.allocate(4).putInt(nrBlock).array();
+        System.arraycopy(nrBloc, 0, bytes, pos, 4); //block#
         pos += 4;
 
-        byteArray = ByteBuffer.allocate(4).putInt(nblocos).array();
-        System.arraycopy(byteArray, 0, bytes, pos, 4); //total blocks
+        byte[] totalBloc = ByteBuffer.allocate(4).putInt(totalBlocks).array();
+        System.arraycopy(totalBloc, 0, bytes, pos, 4); //total blocks
         pos += 4;
 
-        */ 
-
-        for(Map.Entry<String, Long> entry: m.entrySet()){
+        for(Map.Entry<String, LongTuple> entry: m.entrySet()){
             byte[] filename = entry.getKey().getBytes();
             byte[] size_filename = intToBytes(filename.length);
-            byte[] filesize = longToBytes(entry.getValue());
+            LongTuple lt = entry.getValue();
+            byte[] filesize = longToBytes(lt.getA());
+            byte[] lastModifiedDate = longToBytes(lt.getB());
 
             System.arraycopy(size_filename, 0, bytes, pos, 4);
             pos += 4;
             System.arraycopy(filename, 0, bytes, pos, filename.length);
             pos += filename.length;
             System.arraycopy(filesize, 0, bytes, pos, 8);
+            pos += 8;
+            System.arraycopy(lastModifiedDate, 0, bytes, pos, 8);
             pos += 8;
         }
         bytes[pos] = -1;

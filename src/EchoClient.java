@@ -13,7 +13,7 @@ public class EchoClient extends Thread{
     private final int defaultPort;
     private String serverFolder;
     private File folder;
-    private final int SO=1; //Linux -> 0 | Windows -> everything else
+    private final int SO=0; //Linux -> 0 | Windows -> everything else
 
 
     public EchoClient(int defaultPort,InetAddress address,File folder) throws SocketException{
@@ -30,10 +30,10 @@ public class EchoClient extends Thread{
         socket.send(packet);
     }
 
-    Map<String, Long> decodeFILES(byte[] buf) {
-        Map<String, Long> m = new HashMap<>();
+    Map<String, LongTuple> decodeFILES(byte[] buf) {
+        Map<String, LongTuple> m = new HashMap<>();
 
-        for(int i = 1; i < buf.length && buf[i] != -1; ){
+        for(int i = 9; i < buf.length && buf[i] != -1; ){
             byte[] s_fn = new byte[4];
             System.arraycopy(buf, i, s_fn, 0, 4);
             int size_filename = ByteBuffer.wrap(s_fn).getInt();
@@ -47,29 +47,40 @@ public class EchoClient extends Thread{
             Long filesize = ByteBuffer.wrap(fs).getLong();
             i += 8;
 
-            m.put(filename, filesize);
+            byte[] lmd = new byte[8];
+            System.arraycopy(buf, i, lmd, 0, 8);
+            Long lastModifiedDate = ByteBuffer.wrap(lmd).getLong();
+            i += 8;
+
+            LongTuple lt = new LongTuple(filesize, lastModifiedDate);
+
+            m.put(filename, lt);
         }
 
         return m;
     }
 
-    public static void getFilesInFolder(Map<String, Long> m, File folder, String path) {
+    public static void getFilesInFolder(Map<String, LongTuple> m, File folder, String path) {
         for (File fileEntry : Objects.requireNonNull(folder.listFiles())) {
             if (fileEntry.isDirectory()) {
                 getFilesInFolder(m, fileEntry,(path+fileEntry.getName()+"||"));
             } else {
-                m.put(path + fileEntry.getName(), fileEntry.length());
+                LongTuple lt = new LongTuple(fileEntry.length(), fileEntry.lastModified());
+                m.put(path + fileEntry.getName(), lt);
             }
         }
     }
 
-    public static Map<String, Long> partSynchronized(Map<String, Long> mine, Map<String, Long> other){
-        Map<String, Long> res = new HashMap<>();
-        Long l;
+    public static Map<String, LongTuple> partSynchronized(Map<String, LongTuple> mine, Map<String, LongTuple> other){
+        Map<String, LongTuple> res = new HashMap<>();
 
-        for(Map.Entry<String, Long> entry: other.entrySet()){
-            if((l = mine.get(entry.getKey())) != null){
-                if(!entry.getValue().equals(l)){
+        //TODO: fazer a lógica de forma correta
+        for(Map.Entry<String, LongTuple> entry: other.entrySet()){
+            LongTuple lt; 
+            if((lt = mine.get(entry.getKey())) != null){
+                Long my_fileSize = lt.getA();
+                Long fileSize = entry.getValue().getA();
+                if(!fileSize.equals(my_fileSize)){
                     res.put(entry.getKey(), entry.getValue());
                 }
             }
@@ -82,26 +93,30 @@ public class EchoClient extends Thread{
     }
 
     public void getFilesHandler(FILES pacote, File myFolder) throws IOException, InterruptedException {
-        Map<String, Long> mine = new HashMap<>();
-         getFilesInFolder(mine, myFolder, "");
-        Map<String, Long> other = decodeFILES(pacote.getContent());
-        Map<String, Long> missing = partSynchronized(mine, other);
+        Map<String, LongTuple> mine = new HashMap<>();
+        getFilesInFolder(mine, myFolder, "");
+        Map<String, LongTuple> other = decodeFILES(pacote.getContent());
+        Map<String, LongTuple> missing = partSynchronized(mine, other);
         Thread[] missingFiles = new Thread[missing.size()];
         int i=0;
         System.out.println("size: " + missing.size());
         if(SO==0){
-            for(Map.Entry<String, Long> entry: missing.entrySet()){
+            for(Map.Entry<String, LongTuple> entry: missing.entrySet()){
                 String fileName = serverFolder + "/" + entry.getKey();
                 String newFileName = myFolder.getAbsolutePath() + "/" + entry.getKey();
-                missingFiles[i] = new Thread(new DataReciever(address, defaultPort, fileName, newFileName, entry.getValue()));
+                System.out.println("new Filename: " + newFileName);
+                System.out.println("Filename: " + fileName);
+                Long fileSize = entry.getValue().getA();
+                missingFiles[i] = new Thread(new DataReciever(address, defaultPort, fileName, newFileName, fileSize));
                 missingFiles[i].start();
                 i++;
             }
         } else {
-            for(Map.Entry<String, Long> entry: missing.entrySet()){
+            for(Map.Entry<String, LongTuple> entry: missing.entrySet()){
                 String fileName = serverFolder + "\\" + entry.getKey();
                 String newFileName = myFolder.getAbsolutePath() + "\\" + entry.getKey();
-                missingFiles[i] = new Thread(new DataReciever(address, defaultPort, fileName, newFileName, entry.getValue()));
+                Long fileSize = entry.getValue().getA();
+                missingFiles[i] = new Thread(new DataReciever(address, defaultPort, fileName, newFileName, fileSize));
                 missingFiles[i].start();
                 i++;
             }
@@ -173,14 +188,14 @@ public class EchoClient extends Thread{
     }
 
     public void run() {
-        Map<String, Long> m = new HashMap<>();
+        Map<String, LongTuple> m = new HashMap<>();
         getFilesInFolder(m, folder, "");
 
         RRQFolder rrqf = new RRQFolder();
         try{
             FILES files;
             files=waitFILESandName(rrqf);
-
+            
             getFilesHandler(files, folder);
 
             sendPacket(new FIN());
