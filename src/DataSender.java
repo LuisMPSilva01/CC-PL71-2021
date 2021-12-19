@@ -94,7 +94,7 @@ class DataSender implements Runnable {
     public void sendFile(String fileName, int nBlocos, InetAddress address, int port) throws IOException{
         byte[][] ficheiro = decodeFile(nBlocos,fileName);
 
-        socket.setSoTimeout(100);
+        socket.setSoTimeout(10);
 
         UDPWindow windoh = new UDPWindow(25,nBlocos);
 
@@ -102,6 +102,8 @@ class DataSender implements Runnable {
             sendDataBlock(windoh.getNext(),ficheiro,address,port);
         }
 
+        boolean moveOut = false;
+        int timeOuts = windoh.getWindowSize()/2;
         Queue<Integer> sendQueue = new LinkedList<>();
         while (!windoh.isEmpty()) {  //Repetições vai ser usado na ultima iteração para quebrar o ciclo caso não receba o ultimo ack(pode ter sido perdido)
             while (!sendQueue.isEmpty()) {
@@ -116,9 +118,14 @@ class DataSender implements Runnable {
                 if (ack.isOK()) {
                     int ackNumber = ack.getNBloco();
                     sendQueue = windoh.update(ackNumber);
+                    if (sendQueue.isEmpty()) moveOut = true;
                 }
             } catch (SocketTimeoutException ste) {
                 sendQueue.add(windoh.getNext());
+                if (moveOut){
+                    timeOuts--;
+                    if (timeOuts==0) break;
+                }
             }
         }
     }

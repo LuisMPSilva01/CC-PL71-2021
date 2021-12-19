@@ -72,7 +72,7 @@ public class EchoServer extends Thread {
             System.out.println("Packet recieved RRQFolder");
             sendFolderName(address,port);
             sendFILES(address, port);
-            //this.socket.setSoTimeout(2000); // Sendo o RRQFolder pode ser a ultima operação depois do FIN, este timeout vai fazer com que o servidor feche caso o fin se perca
+            this.socket.setSoTimeout(2000); // Sendo o RRQFolder pode ser a ultima operação depois do FIN, este timeout vai fazer com que o servidor feche caso o fin se perca
         } else{
             if ((new RRQFile(array)).isOK()){
                 System.out.println("Packet recieved RRQFile");
