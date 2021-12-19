@@ -13,7 +13,7 @@ class DataSender implements Runnable {
     private final InetAddress address;
     private final String fileName;
     private final int datablock = 1187;
-    int defaultWindowSize=100;
+    int defaultWindowSize=25;
 
     public DataSender(RRQFile rrqFile,InetAddress address,int port) throws SocketException {
         this.address=address;
@@ -58,58 +58,28 @@ class DataSender implements Runnable {
         }
     }
 
-    public int calculaWindowSize(int nBlocos){
-        return Math.min(nBlocos, defaultWindowSize);
-    }
-
-    public byte[][] decodeFile(int nBlocos,String fileName) throws IOException {
-        File f = new File(fileName);
-        int filesize = (int) f.length();
-
-        FileInputStream fis = new FileInputStream(fileName);
-
-        byte[][] ficheiro = new byte[nBlocos][];
-        byte[] blockContent;
-
-        for (int blockN=0;blockN<nBlocos;blockN++){
-            if(blockN == nBlocos - 1){
-                blockContent = new byte[filesize - (blockN * datablock)]; //Ultimo bloco
-            }
-            else{
-                blockContent = new byte[datablock]; //Outros
-            }
-            fis.read(blockContent);
-            ficheiro[blockN]= blockContent.clone();
-        }
-        fis.close();
-        return ficheiro;
-    }
-
-    public void sendDataBlock(int blockN, byte[][] ficheiro,InetAddress address, int port) throws IOException {
-        byte[] blockContent = ficheiro[blockN];
-        DATA d = new DATA(blockN, blockContent); //Guardar conteudo num DATA packet
+    public void sendDataBlock(DataPlusBlock dpb,InetAddress address, int port) throws IOException {
+        DATA d = new DATA(dpb.getBlock(), dpb.getData()); //Guardar conteudo num DATA packet
         sendPacket(d, address, port); //Enviar pacote
     }
 
     public void sendFile(String fileName, int nBlocos, InetAddress address, int port) throws IOException{
-        byte[][] ficheiro = decodeFile(nBlocos,fileName);
-
         socket.setSoTimeout(10);
-
-        UDPWindow windoh = new UDPWindow(25,nBlocos);
+        UDPWindow windoh = new UDPWindow(defaultWindowSize,nBlocos,fileName,datablock);
 
         for (int i=0;i<windoh.getWindowSize();i++) { //Sends first wave
-            sendDataBlock(windoh.getNext(),ficheiro,address,port);
+            sendDataBlock(windoh.getNext(),address,port);
         }
 
         boolean moveOut = false;
         int timeOuts = windoh.getWindowSize()/2;
-        Queue<Integer> sendQueue = new LinkedList<>();
+
+        Queue<DataPlusBlock> sendQueue = new LinkedList<>();
         while (!windoh.isEmpty()) {  //Repetições vai ser usado na ultima iteração para quebrar o ciclo caso não receba o ultimo ack(pode ter sido perdido)
             while (!sendQueue.isEmpty()) {
-                int nextValue = sendQueue.remove();
-                if (nextValue!=-1){
-                    sendDataBlock(nextValue, ficheiro, address, port);
+                DataPlusBlock nextValue = sendQueue.remove();
+                if (nextValue.getBlock()!=-1){
+                    sendDataBlock(nextValue, address, port);
                 }
             }
 

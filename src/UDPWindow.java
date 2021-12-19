@@ -1,55 +1,84 @@
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.LinkedList;
 import java.util.PriorityQueue;
 import java.util.Queue;
 
 public class UDPWindow {
-    private Queue<Integer> window;
+    private Queue<DataPlusBlock> window;
     private int last;
     private final int maxSize;
-    private int windowSize;
+    private final int windowSize;
+    private final FileInputStream fis;
+    private final int BlockSize;
+    private final long filesize;
 
-    public UDPWindow(int defaultWindowSize,int maxSize){
+    public UDPWindow(int defaultWindowSize, int maxSize, String filename, int BlockSize) throws IOException {
         this.maxSize=maxSize;
         this.windowSize = Math.min(maxSize,defaultWindowSize);
+        File f = new File(filename);
+        fis = new FileInputStream(f);
+        this.BlockSize = BlockSize;
+        this.filesize= f.length();
 
         window = new LinkedList<>();
-        for (int i=0;i<windowSize;i++){
-            window.offer(i);
+        for (last=0;last<windowSize;last++){
+            window.offer(new DataPlusBlock(getNextBlock(),last));
         }
-        last=windowSize;
     }
 
     public int getWindowSize(){
         return windowSize;
     }
 
-    public int getNext(){
-        int next= window.remove();
+    public DataPlusBlock getNext(){
+        DataPlusBlock next = window.remove();
         window.offer(next);
         return next;
     }
 
 
-    public Queue<Integer> update(int recieved){
-        Queue<Integer> sendQueue = new LinkedList<>();
-        if(!window.contains(recieved)){
-            sendQueue.add(-1);
+    public Queue<DataPlusBlock> update(int recieved) throws IOException {
+        Queue<DataPlusBlock> sendQueue = new LinkedList<>();
+        if(!containsBlock(recieved)){
+            sendQueue.add(new DataPlusBlock(new byte[1],-1));
             return sendQueue;
         }
         while (true) {
-            int retirado= window.remove();
-            if (retirado==recieved) break;
+            DataPlusBlock retirado= window.remove();
+            if (retirado.getBlock()==recieved) break;
             else {
                 window.offer(retirado);
                 sendQueue.offer(retirado);
             }
         }
         if (last<maxSize){
-            window.offer(last);
-            sendQueue.offer(last);
+            window.offer(new DataPlusBlock(getNextBlock(),last));
+            sendQueue.offer(new DataPlusBlock(getNextBlock(),last));
             last++;
         }
         return sendQueue;
+    }
+
+    private byte[] getNextBlock() throws IOException {
+        byte[] blockContent;
+        if(last==maxSize){
+            blockContent = new byte[(int) Math.IEEEremainder(filesize,BlockSize)]; //Ultimo bloco
+        }
+        else{
+        blockContent = new byte[BlockSize]; //Outros
+        }
+        fis.read(blockContent);
+        return blockContent;
+    }
+
+    public boolean containsBlock(int nBloco){
+        for(DataPlusBlock dpb : window){
+            if (dpb.getBlock()==nBloco) return true;
+        }
+        return false;
     }
 
     public boolean isEmpty(){

@@ -12,7 +12,6 @@ public class DATA implements UDP_Packet{
         byte[] blocos = ByteBuffer.allocate(4).putInt(nBloco).array();
         System.arraycopy(blocos, 0, bytes, 5, 4); //Copiar o número do bloco
         byte[] size = ByteBuffer.allocate(4).putInt(data.length).array();
-        System.out.println("bloco: " + nBloco + " | len: " + data.length);
         System.arraycopy(size, 0, bytes, 9, 4);
         System.arraycopy(data, 0, bytes, 13, data.length); //Copiar a data (possivelmente isto pode ser melhorado)
 

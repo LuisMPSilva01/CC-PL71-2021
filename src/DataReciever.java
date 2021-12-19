@@ -91,7 +91,6 @@ class DataReciever implements Runnable {
                 if (pacote.isOK()) { //Verifica se é um pacote de DATA intacto
                     int blocoPacote = pacote.getNBloco();
                     sendFirst=false;
-                    System.out.println("Bloco recebido:" + blocoPacote);
                     sendPacket(new ACK(blocoPacote));
                     if (blocoPacote>=next&&!containsBlock(waitingToWrite,blocoPacote)) {
                         waitingToWrite.add(new DataPlusBlock(pacote.getConteudo(),blocoPacote));
