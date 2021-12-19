@@ -31,7 +31,7 @@ public class UDPWindow {
 
 
     public Queue<Integer> update(int recieved){
-        Queue<Integer> sendQueue = new PriorityQueue<>();
+        Queue<Integer> sendQueue = new LinkedList<>();
         if(!window.contains(recieved)) return sendQueue;
         while (true) {
             int retirado= window.remove();
