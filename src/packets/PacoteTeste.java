@@ -1,13 +1,11 @@
 package packets;
 
 
+import java.awt.*;
 import java.nio.charset.StandardCharsets;
 
 public class PacoteTeste {
     public static void main(String[] args) {
-        byte[] bytes = new byte[100];
-        String password = "joaozito";
 
-        System.out.println(password.equals(new String(bytes)));
     }
 }

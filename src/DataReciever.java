@@ -19,8 +19,7 @@ class DataReciever implements Runnable {
         this.address=address;
         this.port=serverPort;
         this.socket = new DatagramSocket();
-        int timeOut = 100;
-        this.socket.setSoTimeout(timeOut);
+        //this.socket.setSoTimeout(1000);
         this.fileName=fileName;
         this.newFileName = newFileName;
         this.fileSize=fileSize;
@@ -29,7 +28,6 @@ class DataReciever implements Runnable {
 
     public void sendPacket(UDP_Packet p) throws IOException {
         byte[] buf = p.getContent();
-        System.out.println("Length:"+ buf.length);
         DatagramPacket packet = new DatagramPacket(buf,buf.length, address, port);
         socket.send(packet);
     }
@@ -47,6 +45,7 @@ class DataReciever implements Runnable {
         DatagramPacket packet = new DatagramPacket(buf, buf.length);
 
         try {
+            socket.setSoTimeout(300);
             socket.receive(packet);
             WRQFile pacote = new WRQFile(buf);
             if(pacote.isOK()){
@@ -61,12 +60,12 @@ class DataReciever implements Runnable {
         }
     }
 
-    public byte[] buildFileContent(List<byte[]> l, Long filesize){
+    public byte[] buildFileContent(byte[][] ficheiro, Long filesize){
         byte[] fileContent = new byte[Math.toIntExact(filesize)];
 
-        for(int i = 0; i < l.size(); i++){
+        for(int i = 0; i < ficheiro.length ; i++){
             int datablock = 1187;
-            System.arraycopy(l.get(i), 0, fileContent, i * datablock, l.get(i).length);
+            System.arraycopy(ficheiro[i], 0, fileContent, i * datablock, ficheiro[i].length);
         }
 
         return fileContent;
@@ -79,40 +78,52 @@ class DataReciever implements Runnable {
         os.close();
     }
 
+    public int returnIndex(List<Integer> lista,int target){
+        int i=0;
+        for (int c:lista){
+            if (c==target) return i;
+            i++;
+        }
+        return -1;
+    }
+
     public void writeFile(File f, int nrblocks, Long filesize) throws IOException{
-        List<byte[]> list = new ArrayList<>();
+        byte[][] ficheiro = new byte[nrblocks][];
+        for (int i=0;i<nrblocks;i++){
+            ficheiro[i] = new byte[1];
+        }
+        boolean sendFirst = true;
+        socket.setSoTimeout(50);
 
-        boolean sendACK = true;
-        while (true) {
-            if(sendACK){  //Caso na iteração anterior tenha recebido o pacote errado, não vai enviar ack
-                sendPacket(new ACK(nBloco)); //Enviar o ack para desbloquear o DataSender
-            } else sendACK=true;
-            nBloco++;
-            if((nrblocks)==nBloco) break; //Caso seja o ultimo pacote sai do ciclo
+        sendPacket(new ACK(-1));
+        List<Integer> missing = new ArrayList<>();
+        for (int i=0;i<nrblocks;i++){
+            missing.add(i);
+        }
+        while (!missing.isEmpty()) {
+            try {
+                byte[] buf = new byte[1200]; //Receber pacote
+                DatagramPacket packet = new DatagramPacket(buf, buf.length);
 
-
-            byte[] buf = new byte[1200]; //Receber pacote
-            DatagramPacket packet = new DatagramPacket(buf, buf.length);
-
-            try { //Caso de sucesso
                 this.socket.receive(packet); //Receber pacote
                 DATA pacote = new DATA(buf);
                 if (pacote.isOK()) { //Verifica se é um pacote de DATA intacto
-                    if (pacote.getNBloco() == nBloco) { //Verifica se é o bloco desejado
-                        list.add(pacote.getConteudo()); //Guardar conteudo
-                    } else {
-                        sendACK=false;
-                        nBloco--;
+                    int blocoPacote = pacote.getNBloco();
+                    sendFirst=false;
+                    System.out.println("Bloco recebido:" + blocoPacote);
+                    int index;
+                    sendPacket(new ACK(blocoPacote));
+                    if ((index=returnIndex(missing,blocoPacote))!=-1) {
+                        ficheiro[blocoPacote] = (pacote.getConteudo()); //Guardar conteudo
+                        missing.remove(index);
                     }
-                } else { //Caso de receber um pacote errado
-                    nBloco--;
                 }
             } catch (SocketTimeoutException ste){
-                nBloco--; //Vai repetir iteração para receber o pacote do bloco desta iteração
+                if(sendFirst) sendPacket(new ACK(-1));
             }
         }
 
-        byte[] fileContent = buildFileContent(list, filesize);
+        byte[] fileContent = buildFileContent(ficheiro, filesize);
         writeToFile(f, fileContent);
     }
 

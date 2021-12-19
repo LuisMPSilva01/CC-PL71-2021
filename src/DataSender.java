@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.*;
+import java.util.*;
 
 
 class DataSender implements Runnable {
@@ -12,6 +13,7 @@ class DataSender implements Runnable {
     private final InetAddress address;
     private final String fileName;
     private final int datablock = 1187;
+    int defaultWindowSize=100;
 
     public DataSender(RRQFile rrqFile,InetAddress address,int port) throws SocketException {
         this.address=address;
@@ -56,33 +58,79 @@ class DataSender implements Runnable {
         }
     }
 
-    public void sendFile(String fileName, int nBlocos, InetAddress address, int port) throws IOException{
+    public int calculaWindowSize(int nBlocos){
+        return Math.min(nBlocos, defaultWindowSize);
+    }
+
+    public byte[][] decodeFile(int nBlocos,String fileName) throws IOException {
         File f = new File(fileName);
         int filesize = (int) f.length();
+
         FileInputStream fis = new FileInputStream(fileName);
 
-        for(int i = 0,repeticoes=5; i < nBlocos; i++){  //Repetições vai ser usado na ultima iteração para quebrar o ciclo caso não receba o ultimo ack(pode ter sido perdido)
-            byte[] blockContent;
-            if(i == nBlocos - 1){
-                blockContent = new byte[filesize - (i * datablock)]; //Ultimo bloco
+        byte[][] ficheiro = new byte[nBlocos][];
+        byte[] blockContent;
+
+        for (int blockN=0;blockN<nBlocos;blockN++){
+            if(blockN == nBlocos - 1){
+                blockContent = new byte[filesize - (blockN * datablock)]; //Ultimo bloco
             }
             else{
                 blockContent = new byte[datablock]; //Outros
             }
-
             fis.read(blockContent);
-            DATA d = new DATA(i, blockContent); //Guardar conteudo num DATA packet
-
-            do{
-                sendPacket(d, address, port); //Enviar pacote
-                if(i==nBlocos-1){ //Caso seja a ultima iteração
-                    socket.setSoTimeout(100);
-                    repeticoes--;
-                    if(repeticoes==0) break;
-                }
-            } while (waitACK()!=(i)); //Repetir enquanto não receber ack do pacote
+            ficheiro[blockN]= blockContent.clone();
         }
         fis.close();
+        return ficheiro;
+    }
+
+    public void sendDataBlock(int blockN, byte[][] ficheiro,InetAddress address, int port) throws IOException {
+        byte[] blockContent = ficheiro[blockN];
+        DATA d = new DATA(blockN, blockContent); //Guardar conteudo num DATA packet
+        sendPacket(d, address, port); //Enviar pacote
+    }
+
+    public void sendFile(String fileName, int nBlocos, InetAddress address, int port) throws IOException{
+        byte[][] ficheiro = decodeFile(nBlocos,fileName);
+
+        socket.setSoTimeout(10);
+
+        UDPWindow windoh = new UDPWindow(25,nBlocos);
+
+        for (int i=0;i<windoh.getWindowSize();i++) { //Sends first wave
+            sendDataBlock(windoh.getNext(),ficheiro,address,port);
+        }
+
+        boolean moveOut = false;
+        int timeOuts = windoh.getWindowSize()/2;
+        Queue<Integer> sendQueue = new LinkedList<>();
+        while (!windoh.isEmpty()) {  //Repetições vai ser usado na ultima iteração para quebrar o ciclo caso não receba o ultimo ack(pode ter sido perdido)
+            while (!sendQueue.isEmpty()) {
+                int nextValue = sendQueue.remove();
+                if (nextValue!=-1){
+                    sendDataBlock(nextValue, ficheiro, address, port);
+                }
+            }
+
+            try {
+                byte[] dataRecieved = new byte[1200];
+                DatagramPacket packet = new DatagramPacket(dataRecieved, 1200);
+                socket.receive(packet);
+                ACK ack = new ACK(dataRecieved);
+                if (ack.isOK()) {
+                    int ackNumber = ack.getNBloco();
+                    sendQueue = windoh.update(ackNumber);
+                    if (sendQueue.isEmpty()) moveOut = true;
+                }
+            } catch (SocketTimeoutException ste) {
+                sendQueue.add(windoh.getNext());
+                if (moveOut){
+                    timeOuts--;
+                    if (timeOuts==0) break;
+                }
+            }
+        }
     }
 
     public void run(){

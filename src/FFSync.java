@@ -93,7 +93,7 @@ public class FFSync {
         */
 
         int defaultPort=8888;
-        int SO = 1; //SO==0 LINUX || ELSE WINDOWS
+        int SO =0; //SO==0 LINUX || ELSE WINDOWS
         long startSize = Files.walk(Paths.get(args[0])) //Get folder starting size
                 .filter(p -> p.toFile().isFile())
                 .mapToLong(p -> p.toFile().length())
@@ -116,7 +116,7 @@ public class FFSync {
             } else { //Cenario de teste
                 start = new Date(); //Hora de começo
                 File folder1,folder2;
-                if (SO==0){
+                if (SO==1){
                     folder1 = new File("/home/ray/Downloads/teste3");
                     folder2 = new File("/home/ray/Downloads/teste2");
                 }else {

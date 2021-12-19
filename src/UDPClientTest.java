@@ -15,8 +15,7 @@ public class UDPClientTest {
         }else {
             folder = new File("C:\\Users\\Acer\\Desktop\\teste1");
         }
-        DatagramSocket socket = new DatagramSocket(8889);
-        FFSync.verificaPassword(socket, InetAddress.getByName("localhost"),8888);
+
         EchoClient client = new EchoClient(8888, InetAddress.getByName("localhost"),folder);
         client.start();
     }
