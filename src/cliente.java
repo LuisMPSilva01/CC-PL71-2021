@@ -1,3 +1,4 @@
+import java.awt.Window;
 import java.io.*;
 import java.net.Socket;
 import java.util.logging.FileHandler;
@@ -7,6 +8,13 @@ import java.util.logging.SimpleFormatter;
 public class cliente {
 
     public static void main(String[] args) throws IOException {
+
+
+
+
+
+
+
         if(args.length!=1){
             System.out.println("Format: FCliente ficheiro");
             return;

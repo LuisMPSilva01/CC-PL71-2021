@@ -4,6 +4,13 @@ import java.net.Socket;
 
 public class server {
     public static void main(String[] args) throws IOException {
+
+        UDPWindow windoh = new UDPWindow(5,50);
+        windoh.update(2);
+        windoh.update(2);
+        windoh.update(2);
+
+
         ServerSocket serverSocket = null;
 
         try {

@@ -1,12 +1,14 @@
-import java.util.*;
+import java.util.LinkedList;
+import java.util.PriorityQueue;
+import java.util.Queue;
 
-public class Window {
+public class UDPWindow {
     private Queue<Integer> window;
     private int last;
     private final int maxSize;
     private int windowSize;
 
-    public Window(int defaultWindowSize,int maxSize){
+    public UDPWindow(int defaultWindowSize,int maxSize){
         this.maxSize=maxSize;
         this.windowSize = Math.min(maxSize,defaultWindowSize);
 

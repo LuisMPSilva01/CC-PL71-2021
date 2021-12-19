@@ -96,7 +96,7 @@ class DataSender implements Runnable {
 
         socket.setSoTimeout(100);
 
-        Window windoh = new Window(25,nBlocos);
+        UDPWindow windoh = new UDPWindow(25,nBlocos);
 
         for (int i=0;i<windoh.getWindowSize();i++) { //Sends first wave
             sendDataBlock(windoh.getNext(),ficheiro,address,port);

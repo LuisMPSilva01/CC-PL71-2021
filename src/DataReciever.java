@@ -112,9 +112,9 @@ class DataReciever implements Runnable {
                     sendFirst=false;
                     System.out.println("Bloco recebido:" + blocoPacote);
                     int index;
+                    sendPacket(new ACK(blocoPacote));
                     if ((index=returnIndex(missing,blocoPacote))!=-1) {
                         ficheiro[blocoPacote] = (pacote.getConteudo()); //Guardar conteudo
-                        sendPacket(new ACK(blocoPacote));
                         missing.remove(index);
                     }
                 }
