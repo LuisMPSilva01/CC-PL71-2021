@@ -1,5 +1,4 @@
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.*;
 import java.nio.ByteBuffer;
@@ -8,19 +7,19 @@ import java.util.*;
 
 import packets.*;
 
-public class EchoClient extends Thread{
+public class Client extends Thread{
     private final DatagramSocket socket;
     private final InetAddress address;
     private final int defaultPort;
     private String serverFolder;
     private File folder;
     private final int SO=1; //Linux -> 0 | Windows -> everything else
-    private Logs logs;
+    private LogsMaker logs;
     private boolean showPL;
     private PacketLogs packetLogs;
 
 
-    public EchoClient(int defaultPort, InetAddress address, File folder, Logs logs,boolean showPL) throws IOException {
+    public Client(int defaultPort, InetAddress address, File folder, LogsMaker logs, boolean showPL) throws IOException {
         this.socket = new DatagramSocket();
         this.socket.setSoTimeout(100);        //TIMEOUT
         this.address = address;
@@ -114,7 +113,7 @@ public class EchoClient extends Thread{
                 String newFileName = myFolder.getAbsolutePath() + "/" + entry.getKey();
                 System.out.println("new Filename: " + newFileName);
                 System.out.println("Filename: " + fileName);
-                missingFiles[i] = new Thread(new DataReceiver(address, defaultPort, fileName, newFileName,logs,showPL,packetLogs));
+                missingFiles[i] = new Thread(new FT_Rapid_Receiver(address, defaultPort, fileName, newFileName,logs,showPL,packetLogs));
                 missingFiles[i].start();
                 i++;
             }
@@ -122,7 +121,7 @@ public class EchoClient extends Thread{
             for(Map.Entry<String, LongTuple> entry: missing.entrySet()){
                 String fileName = serverFolder + "\\" + entry.getKey();
                 String newFileName = myFolder.getAbsolutePath() + "\\" + entry.getKey();
-                missingFiles[i] = new Thread(new DataReceiver(address, defaultPort, fileName, newFileName,logs,showPL,packetLogs));
+                missingFiles[i] = new Thread(new FT_Rapid_Receiver(address, defaultPort, fileName, newFileName,logs,showPL,packetLogs));
                 missingFiles[i].start();
                 i++;
             }

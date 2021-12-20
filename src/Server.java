@@ -6,18 +6,18 @@ import java.util.*;
 
 import packets.*;
 
-public class EchoServer extends Thread {
+public class Server extends Thread {
     private final DatagramSocket socket;
     boolean running = true;
     private final File folder;
     private final List<Thread> threads = new ArrayList<>();
     private int sizeBlock = 1200;
-    private Logs logs;
+    private LogsMaker logs;
     private boolean showPL;
     private PacketLogs packetLogs;
 
 
-    public EchoServer(DatagramSocket socket, File folder, Logs logs,boolean showPL) throws IOException {
+    public Server(DatagramSocket socket, File folder, LogsMaker logs,boolean showPL) throws IOException {
         this.socket = socket;
         this.folder= folder;
         this.logs=logs;
@@ -70,7 +70,6 @@ public class EchoServer extends Thread {
         for(Map.Entry<String, LongTuple> entry: map.entrySet()){
             if(sizeBlock > total + 4 + entry.getKey().length() + 8 + 8){
                 total += 4 + entry.getKey().length() + 8 + 8;
-                FILES.put(entry.getKey(), entry.getValue());
             }
             else{
                 //send packet
@@ -81,8 +80,8 @@ public class EchoServer extends Thread {
                 } while (waitACK()!=0);
                 FILES.clear();
                 total = 9 + 4 + entry.getKey().length() + 8 + 8;
-                FILES.put(entry.getKey(), entry.getValue());
             }
+            FILES.put(entry.getKey(), entry.getValue());
         }
         block ++;
         FILES files = new FILES(FILES, block, nrBlocksFILES);
@@ -126,7 +125,7 @@ public class EchoServer extends Thread {
             if ((udpPacket=new RRQFile(array)).isOK()){
                 System.out.println("Packet recieved RRQFile");
                 RRQFile pacote =new RRQFile(array);
-                Thread ds = new Thread(new DataSender(pacote,address,port,logs,showPL,packetLogs));
+                Thread ds = new Thread(new FT_Rapid_Sender(pacote,address,port,logs,showPL,packetLogs));
                 ds.start();
                 threads.add(ds);
             } else {

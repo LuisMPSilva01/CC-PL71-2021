@@ -1,14 +1,7 @@
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.text.DateFormat;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.Locale;
 import java.util.Scanner;
 
 
@@ -112,15 +105,15 @@ public class FFSync {
         boolean showPL = showPacketLogs();
         try {
 
-            Logs logs;
+            LogsMaker logs;
             if(args.length==2) { //Cenario normal
                 DatagramSocket socket = new DatagramSocket(defaultPort);
                 verificaPassword(socket,InetAddress.getByName(args[1]),defaultPort);
-                logs = new Logs(args[0],args[1]);
-                Thread servidor = new Thread(new EchoServer(socket,new File(args[0]),logs,showPL));
+                logs = new LogsMaker(args[0],args[1]);
+                Thread servidor = new Thread(new Server(socket,new File(args[0]),logs,showPL));
                 servidor.start();
 
-                Thread cliente = new Thread(new EchoClient(defaultPort, InetAddress.getByName(args[1]),new File(args[0]),logs,showPL));
+                Thread cliente = new Thread(new Client(defaultPort, InetAddress.getByName(args[1]),new File(args[0]),logs,showPL));
                 cliente.start();
 
                 servidor.join();
@@ -136,18 +129,18 @@ public class FFSync {
                 }
 
                 DatagramSocket socket1 = new DatagramSocket(defaultPort);
-                logs = new Logs(args[0],args[1]);
-                Thread servidor1 = new Thread(new EchoServer(socket1,folder1,logs,showPL));
+                logs = new LogsMaker(args[0],args[1]);
+                Thread servidor1 = new Thread(new Server(socket1,folder1,logs,showPL));
                 servidor1.start();
 
-                Thread cliente1 = new Thread(new EchoClient(8889, InetAddress.getByName("localhost"),folder1,logs,showPL)); //change
+                Thread cliente1 = new Thread(new Client(8889, InetAddress.getByName("localhost"),folder1,logs,showPL)); //change
                 cliente1.start();
                 ////////////////////////////////////
                 DatagramSocket socket2 = new DatagramSocket(8889);
-                Thread servidor2 = new Thread(new EchoServer(socket2,folder2,logs,showPL));
+                Thread servidor2 = new Thread(new Server(socket2,folder2,logs,showPL));
                 servidor2.start();
 
-                Thread cliente2 = new Thread(new EchoClient(defaultPort, InetAddress.getByName("localhost"),folder2,logs,showPL)); //change
+                Thread cliente2 = new Thread(new Client(defaultPort, InetAddress.getByName("localhost"),folder2,logs,showPL)); //change
                 cliente2.start();
 
                 servidor1.join();

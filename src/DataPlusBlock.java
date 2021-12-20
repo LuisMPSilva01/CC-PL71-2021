@@ -1,4 +1,6 @@
-public record DataPlusBlock(byte[] data, int block) implements Comparable<DataPlusBlock> {
+public class DataPlusBlock implements Comparable<DataPlusBlock> {
+    private final byte[] data;
+    private final int block;
     public DataPlusBlock(byte[] data, int block) {
         this.data = data.clone();
         this.block = block;

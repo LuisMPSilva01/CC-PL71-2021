@@ -6,7 +6,7 @@ import java.util.LinkedList;
 import java.util.PriorityQueue;
 import java.util.Queue;
 
-public class UDPWindow {
+public class SlidingWindow {
     private Queue<DataPlusBlock> window;
     private int last;
     private final int maxSize;
@@ -15,7 +15,7 @@ public class UDPWindow {
     private final int BlockSize;
     private final long filesize;
 
-    public UDPWindow(int defaultWindowSize, int maxSize, String filename, int BlockSize) throws IOException {
+    public SlidingWindow(int defaultWindowSize, int maxSize, String filename, int BlockSize) throws IOException {
         this.maxSize=maxSize;
         this.windowSize = Math.min(maxSize,defaultWindowSize);
         File f = new File(filename);
@@ -55,8 +55,9 @@ public class UDPWindow {
             }
         }
         if (last<maxSize){
-            window.offer(new DataPlusBlock(getNextBlock(),last));
-            sendQueue.offer(new DataPlusBlock(getNextBlock(),last));
+            DataPlusBlock dpb = new DataPlusBlock(getNextBlock(),last);
+            window.offer(dpb);
+            sendQueue.offer(dpb);
             last++;
         }
         return sendQueue;

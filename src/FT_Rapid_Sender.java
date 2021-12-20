@@ -1,24 +1,23 @@
 import packets.*;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.*;
 import java.util.*;
 
 
-class DataSender implements Runnable {
+class FT_Rapid_Sender implements Runnable {
     private final DatagramSocket socket;
     private final int port;
     private final InetAddress address;
     private final String fileName;
     private final int datablock = 1187;
     private int defaultWindowSize=25;
-    private Logs logs;
+    private LogsMaker logs;
     private boolean showPL;
     private PacketLogs packetLogs;
 
-    public DataSender(RRQFile rrqFile,InetAddress address,int port,Logs logs,boolean showPL,PacketLogs packetLogs) throws SocketException {
+    public FT_Rapid_Sender(RRQFile rrqFile, InetAddress address, int port, LogsMaker logs, boolean showPL, PacketLogs packetLogs) throws SocketException {
         this.address=address;
         this.port=port;
         this.socket = new DatagramSocket();
@@ -75,7 +74,7 @@ class DataSender implements Runnable {
 
     public void sendFile(String fileName, int nBlocos, InetAddress address, int port) throws IOException{
         socket.setSoTimeout(10);
-        UDPWindow windoh = new UDPWindow(defaultWindowSize,nBlocos,fileName,datablock);
+        SlidingWindow windoh = new SlidingWindow(defaultWindowSize,nBlocos,fileName,datablock);
 
         for (int i=0;i<windoh.getWindowSize();i++) { //Sends first wave
             sendDataBlock(windoh.getNext(),address,port);

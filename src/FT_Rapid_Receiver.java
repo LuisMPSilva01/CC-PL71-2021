@@ -3,20 +3,19 @@ import packets.*;
 import java.io.*;
 import java.net.*;
 import java.util.*;
-import java.util.stream.Collectors;
 
 
-class DataReceiver implements Runnable {
+class FT_Rapid_Receiver implements Runnable {
     private final DatagramSocket socket;
     private int port;
     private InetAddress address;
     private final String fileName;
     private final String newFileName;
-    private Logs logs;
+    private LogsMaker logs;
     private boolean showPL;
     private PacketLogs packetLogs;
 
-    public DataReceiver(InetAddress address,int serverPort,String fileName,String newFileName,Logs logs,boolean showPL,PacketLogs packetLogs) throws SocketException{
+    public FT_Rapid_Receiver(InetAddress address, int serverPort, String fileName, String newFileName, LogsMaker logs, boolean showPL, PacketLogs packetLogs) throws SocketException{
         this.address=address;
         this.port=serverPort;
         this.socket = new DatagramSocket();

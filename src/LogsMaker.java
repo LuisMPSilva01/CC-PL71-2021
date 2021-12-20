@@ -8,7 +8,7 @@ import java.text.DateFormat;
 import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
 
-public class Logs {
+public class LogsMaker {
     private FileOutputStream logs;
     private ReentrantLock lock= new ReentrantLock();
     private long startSize;
@@ -19,7 +19,7 @@ public class Logs {
     private List<String> enviados= new ArrayList<>();
     private List<String> recebidos= new ArrayList<>();
 
-    public Logs(String filename,String peer) throws IOException {
+    public LogsMaker(String filename, String peer) throws IOException {
         this.filename=filename;
         this.peer=peer;
         this.logs = new FileOutputStream("logs", true);

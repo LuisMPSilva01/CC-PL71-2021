@@ -1,10 +1,6 @@
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.SocketException;
-import java.net.UnknownHostException;
 
 public class UDPClientTest {
     public static void main(String[] args) throws IOException {
@@ -16,8 +12,8 @@ public class UDPClientTest {
         }else {
             folder = new File("C:\\Users\\Acer\\Desktop\\teste1");
         }
-        Logs logs = new Logs("C:\\Users\\Acer\\Desktop\\teste1","myself");
-        EchoClient client = new EchoClient(8888, InetAddress.getByName("localhost"),folder,logs,false);
+        LogsMaker logs = new LogsMaker("C:\\Users\\Acer\\Desktop\\teste1","myself");
+        Client client = new Client(8888, InetAddress.getByName("localhost"),folder,logs,false);
         client.start();
     }
 }

@@ -1,8 +1,6 @@
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.DatagramSocket;
-import java.net.InetAddress;
 
 public class UDPserverTEST {
     public static void main(String[] args) throws IOException {
@@ -15,9 +13,9 @@ public class UDPserverTEST {
         }else {
             folder = new File("C:\\Users\\Acer\\Desktop\\teste2");
         }
-        Logs logs = new Logs("C:\\Users\\Acer\\Desktop\\teste2","myself");
+        LogsMaker logs = new LogsMaker("C:\\Users\\Acer\\Desktop\\teste2","myself");
         DatagramSocket socket = new DatagramSocket(8888);
-        EchoServer server = new EchoServer(socket,folder,logs,false);
+        Server server = new Server(socket,folder,logs,false);
         server.start();
     }
 }
