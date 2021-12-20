@@ -60,7 +60,7 @@ public class EchoServer extends Thread {
         return block + 1;
     }
 
-    public void sendFILES(InetAddress address, int port) throws IOException {
+    public void FT_Rapid(InetAddress address, int port) throws IOException {
         Map<String, LongTuple> map = new HashMap<>();
         getFilesInFolder(map, folder, "");
         int nrBlocksFILES = nrBlocksFILES(map);
@@ -120,7 +120,7 @@ public class EchoServer extends Thread {
         UDP_Packet udpPacket;
         if((udpPacket=new RRQFolder(array)).isOK()){
             sendFolderName(address,port);
-            sendFILES(address, port);
+            FT_Rapid(address, port);
             this.socket.setSoTimeout(2000); // Sendo o RRQFolder pode ser a ultima operação depois do FIN, este timeout vai fazer com que o servidor feche caso o fin se perca
         } else{
             if ((udpPacket=new RRQFile(array)).isOK()){
