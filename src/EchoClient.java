@@ -83,15 +83,16 @@ public class EchoClient extends Thread{
     public static Map<String, LongTuple> partSynchronized(Map<String, LongTuple> mine, Map<String, LongTuple> other){
         Map<String, LongTuple> res = new HashMap<>();
 
-        //TODO: fazer a lógica de forma correta
         for(Map.Entry<String, LongTuple> entry: other.entrySet()){
-            LongTuple lt; 
+            LongTuple lt;
             if((lt = mine.get(entry.getKey())) != null){
                 Long my_fileSize = lt.getA();
+                Long my_lmd = lt.getB();
                 Long fileSize = entry.getValue().getA();
-                if(!fileSize.equals(my_fileSize)){
+                Long lmd = entry.getValue().getA();
+
+                if(my_lmd < lmd)
                     res.put(entry.getKey(), entry.getValue());
-                }
             }
             else{
                 res.put(entry.getKey(), entry.getValue());
