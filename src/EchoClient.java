@@ -1,4 +1,5 @@
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.*;
 import java.nio.ByteBuffer;
@@ -14,20 +15,27 @@ public class EchoClient extends Thread{
     private String serverFolder;
     private File folder;
     private final int SO=1; //Linux -> 0 | Windows -> everything else
+    private Logs logs;
+    private boolean showPL;
+    private PacketLogs packetLogs;
 
 
-    public EchoClient(int defaultPort,InetAddress address,File folder) throws SocketException{
+    public EchoClient(int defaultPort, InetAddress address, File folder, Logs logs,boolean showPL) throws IOException {
         this.socket = new DatagramSocket();
         this.socket.setSoTimeout(100);        //TIMEOUT
         this.address = address;
         this.defaultPort=defaultPort;
         this.folder=folder;
+        this.logs=logs;
+        this.showPL=showPL;
+        if(showPL) this.packetLogs= new PacketLogs("Cliente_packets.txt");
     }
 
     public void sendPacket(UDP_Packet p) throws IOException {
         byte[] buf = p.getContent();
         DatagramPacket packet = new DatagramPacket(buf, buf.length, address, defaultPort);
         socket.send(packet);
+        if(showPL) this.packetLogs.sent(p.toLogInput());
     }
 
     Map<String, LongTuple> decodeFILES(byte[] buf) {
@@ -64,6 +72,7 @@ public class EchoClient extends Thread{
         for (File fileEntry : Objects.requireNonNull(folder.listFiles())) {
             if (fileEntry.isDirectory()) {
                 getFilesInFolder(m, fileEntry,(path+fileEntry.getName()+"||"));
+
             } else {
                 LongTuple lt = new LongTuple(fileEntry.length(), fileEntry.lastModified());
                 m.put(path + fileEntry.getName(), lt);
@@ -106,7 +115,7 @@ public class EchoClient extends Thread{
                 String newFileName = myFolder.getAbsolutePath() + "/" + entry.getKey();
                 System.out.println("new Filename: " + newFileName);
                 System.out.println("Filename: " + fileName);
-                missingFiles[i] = new Thread(new DataReciever(address, defaultPort, fileName, newFileName));
+                missingFiles[i] = new Thread(new DataReceiver(address, defaultPort, fileName, newFileName,logs,showPL,packetLogs));
                 missingFiles[i].start();
                 i++;
             }
@@ -114,7 +123,7 @@ public class EchoClient extends Thread{
             for(Map.Entry<String, LongTuple> entry: missing.entrySet()){
                 String fileName = serverFolder + "\\" + entry.getKey();
                 String newFileName = myFolder.getAbsolutePath() + "\\" + entry.getKey();
-                missingFiles[i] = new Thread(new DataReciever(address, defaultPort, fileName, newFileName));
+                missingFiles[i] = new Thread(new DataReceiver(address, defaultPort, fileName, newFileName,logs,showPL,packetLogs));
                 missingFiles[i].start();
                 i++;
             }
@@ -143,6 +152,7 @@ public class EchoClient extends Thread{
                 this.socket.receive(packet); //Receber pacote
                 FILES pacote = new FILES(buf);
                 if (pacote.isOK()) { //Verifica se é um pacote de FILES
+                    if(showPL) this.packetLogs.received(pacote.toLogInput());
                     if (pacote.getNbloco()==nBloco) {
                         sendPacket(new ACK(nBloco)); //Enviar o ack para desbloquear o FILES
                         return new FILES(buf);
@@ -169,8 +179,10 @@ public class EchoClient extends Thread{
                 this.socket.receive(packet);
             }catch (SocketTimeoutException ignored){}
             fn = new FolderName(buf);
+            if(showPL) this.packetLogs.received("bad foldername");
         } while (!fn.isOK()); //Verificação do pacote
 
+        if(showPL) this.packetLogs.received(fn.toLogInput());
         this.serverFolder = fn.getFolderName();
         return fn.getFilesBlocks();
     }

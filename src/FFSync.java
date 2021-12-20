@@ -80,6 +80,22 @@ public class FFSync {
         }
     }
 
+    public static boolean showPacketLogs(){
+        Scanner sc = new Scanner(System.in);
+
+        System.out.println("Deseja observar os logs acerca dos pacotes enviados? (y/n)");
+        while (true) {
+            String resposta = sc.nextLine().trim().toLowerCase();
+            if (resposta.equals("y")) {
+                return true;
+            } else if (resposta.equals("n")) {
+                return false;
+            } else {
+                System.out.println("Tente outra vez. Responda com y/n");
+            }
+        }
+    }
+
     public static void main(String[] args) throws IOException {
 
         //if(!isReachable(args)) return;
@@ -88,33 +104,28 @@ public class FFSync {
             System.out.println("Formato errado, tente : FFSync pasta1 10.1.1.1");
             return;
         }
-        System.out.println("Net is: "+netIsAvailable()); //Adicionar returns caso falso
         System.out.println("Ficheiro existe: "+Files.exists(Path.of(args[0]))); //Adicionar returns caso falso
         */
 
         int defaultPort=8888;
         int SO =1; //SO==0 LINUX || ELSE WINDOWS
-        long startSize = Files.walk(Paths.get(args[0])) //Get folder starting size
-                .filter(p -> p.toFile().isFile())
-                .mapToLong(p -> p.toFile().length())
-                .sum();
-
+        boolean showPL = showPacketLogs();
         try {
-            Date start;
+
+            Logs logs;
             if(args.length==2) { //Cenario normal
                 DatagramSocket socket = new DatagramSocket(defaultPort);
                 verificaPassword(socket,InetAddress.getByName(args[1]),defaultPort);
-                start = new Date(); //Hora de começo
-                Thread servidor = new Thread(new EchoServer(socket,new File(args[0])));
+                logs = new Logs(args[0],args[1]);
+                Thread servidor = new Thread(new EchoServer(socket,new File(args[0]),logs,showPL));
                 servidor.start();
 
-                Thread cliente = new Thread(new EchoClient(defaultPort, InetAddress.getByName(args[1]),new File(args[0])));
+                Thread cliente = new Thread(new EchoClient(defaultPort, InetAddress.getByName(args[1]),new File(args[0]),logs,showPL));
                 cliente.start();
 
                 servidor.join();
                 cliente.join();
             } else { //Cenario de teste
-                start = new Date(); //Hora de começo
                 File folder1,folder2;
                 if (SO==0){
                     folder1 = new File("/home/ray/Downloads/teste3");
@@ -125,17 +136,18 @@ public class FFSync {
                 }
 
                 DatagramSocket socket1 = new DatagramSocket(defaultPort);
-                Thread servidor1 = new Thread(new EchoServer(socket1,folder1));
+                logs = new Logs(args[0],args[1]);
+                Thread servidor1 = new Thread(new EchoServer(socket1,folder1,logs,showPL));
                 servidor1.start();
 
-                Thread cliente1 = new Thread(new EchoClient(8889, InetAddress.getByName("localhost"),folder1)); //change
+                Thread cliente1 = new Thread(new EchoClient(8889, InetAddress.getByName("localhost"),folder1,logs,showPL)); //change
                 cliente1.start();
                 ////////////////////////////////////
                 DatagramSocket socket2 = new DatagramSocket(8889);
-                Thread servidor2 = new Thread(new EchoServer(socket2,folder2));
+                Thread servidor2 = new Thread(new EchoServer(socket2,folder2,logs,showPL));
                 servidor2.start();
 
-                Thread cliente2 = new Thread(new EchoClient(defaultPort, InetAddress.getByName("localhost"),folder2)); //change
+                Thread cliente2 = new Thread(new EchoClient(defaultPort, InetAddress.getByName("localhost"),folder2,logs,showPL)); //change
                 cliente2.start();
 
                 servidor1.join();
@@ -143,28 +155,8 @@ public class FFSync {
                 servidor2.join();
                 cliente2.join();
             }
+            logs.finish();
 
-            ////Start of Logs
-            Date finish = new Date();
-            long timeTaken = finish.getTime()-start.getTime();
-            long endSize = Files.walk(Paths.get(args[0])) //Get folder ending size
-                    .filter(p -> p.toFile().isFile())
-                    .mapToLong(p -> p.toFile().length())
-                    .sum();
-            long dataTransferida = endSize-startSize;
-            DateFormat DFormat = DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG, Locale.getDefault()); //Date format
-
-            FileOutputStream fos = new FileOutputStream("logs", true);
-            fos.write(("INFO: FFSync "+ args[0] +" " + Arrays.toString(Arrays.copyOfRange(args, 1, args.length)) + "\n" +
-                "Date: "+ DFormat.format(start) +"\n"+
-                "Time taken: " + (timeTaken) + " miliseconds\n" +
-                "StartSize: " + (startSize) + "\n" +
-                "EndSize: " + (endSize) + "\n" +
-                "Data transferida: " + dataTransferida + " bytes\n" +
-                "Bitrate: " + ((float)dataTransferida/timeTaken*1000) + " bytes/segundo\n" + //Como conseguir o débito real?
-                "-----------------------------------------------------\n").getBytes());
-            fos.close();
-            ////End of Logs
         } catch (SocketException | InterruptedException e) {
         System.out.println("Porta em uso, tente novamente mais tarde");
         }

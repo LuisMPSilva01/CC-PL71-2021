@@ -1,0 +1,21 @@
+Sent RRQFolder
+Sent RRQFolder
+Received bad foldername
+Received bad foldername
+Received FolderName(C:\Users\Acer\Desktop\teste1)
+Received FolderName(C:\Users\Acer\Desktop\teste2)
+Sent ACK(-1)
+Sent ACK(-1)
+Received FILES(0)
+Received FILES(0)
+Sent ACK(0)
+Sent ACK(0)
+Sent FIN
+Sent RRQFile(C:\Users\Acer\Desktop\teste2\ficha11_BB.pl)
+Received WRQFile(2)
+Sent ACK(-1)
+Received DATA(0)
+Sent ACK(0)
+Received DATA(1)
+Sent ACK(1)
+Sent FIN

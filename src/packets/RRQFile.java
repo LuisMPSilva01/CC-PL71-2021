@@ -49,4 +49,9 @@ public class RRQFile implements UDP_Packet{
         return 2 == bytes[4]&&
                 getHashCode() == Arrays.hashCode(Arrays.copyOfRange(bytes, 4,1200));
     }
+
+    @Override
+    public String toLogInput() {
+        return "RRQFile("+getFileName()+")";
+    }
 }

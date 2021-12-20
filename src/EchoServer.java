@@ -1,4 +1,5 @@
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.*;
 import java.util.*;
@@ -10,18 +11,25 @@ public class EchoServer extends Thread {
     boolean running = true;
     private final File folder;
     private final List<Thread> threads = new ArrayList<>();
-    public int nThreads=0;
-    public int sizeBlock = 1200;
+    private int sizeBlock = 1200;
+    private Logs logs;
+    private boolean showPL;
+    private PacketLogs packetLogs;
 
-    public EchoServer(DatagramSocket socket,File folder) throws SocketException{
+
+    public EchoServer(DatagramSocket socket, File folder, Logs logs,boolean showPL) throws IOException {
         this.socket = socket;
         this.folder= folder;
+        this.logs=logs;
+        this.showPL=showPL;
+        if(showPL) this.packetLogs= new PacketLogs("Servidor_packets.txt");
     }
 
     public void sendPacket(UDP_Packet p, InetAddress address, int port) throws IOException {
         byte[] buf = p.getContent();
         DatagramPacket packet = new DatagramPacket(buf, buf.length, address, port);
         socket.send(packet);
+        if(showPL) packetLogs.sent(p.toLogInput());
     }
 
     public static void getFilesInFolder(Map<String, LongTuple> m, File folder, String path) {
@@ -96,6 +104,7 @@ public class EchoServer extends Thread {
             socket.receive(packet);
             ACK ack = new ACK(buf);
             if(ack.isOK()){
+                if(showPL) packetLogs.received(ack.toLogInput());
                 return ack.getNBloco();
             } else {
                 return -2;
@@ -107,31 +116,33 @@ public class EchoServer extends Thread {
     }
 
     public void analisePacket(byte[] array, InetAddress address, int port) throws IOException {
-        if((new RRQFolder(array)).isOK()){
-            System.out.println("Packet recieved RRQFolder");
+        UDP_Packet udpPacket;
+        if((udpPacket=new RRQFolder(array)).isOK()){
             sendFolderName(address,port);
             sendFILES(address, port);
             this.socket.setSoTimeout(2000); // Sendo o RRQFolder pode ser a ultima operação depois do FIN, este timeout vai fazer com que o servidor feche caso o fin se perca
         } else{
-            if ((new RRQFile(array)).isOK()){
+            if ((udpPacket=new RRQFile(array)).isOK()){
                 System.out.println("Packet recieved RRQFile");
                 RRQFile pacote =new RRQFile(array);
-                Thread ds = new Thread(new DataSender(pacote,address,port));
-                nThreads++;
+                Thread ds = new Thread(new DataSender(pacote,address,port,logs,showPL,packetLogs));
                 ds.start();
                 threads.add(ds);
             } else {
-                if ((new FIN(array)).isOK()){
+                if ((udpPacket=new FIN(array)).isOK()){
                     System.out.println("Packet recieved FIN");
                     running=false;
-                } else System.out.println("Pacote recebido ignorado");
+                } else {
+                    if(showPL) packetLogs.received(" Ignored packet");
+                    return;
+                }
             }
-        }
+        } if(showPL) packetLogs.received(udpPacket.toLogInput());
     }
 
     public void run() {
-        while (running) {
-            try {
+        try {
+            while (running) {
                 byte[] buf = new byte[1200];
                 DatagramPacket packet = new DatagramPacket(buf, buf.length);
                 try {
@@ -141,17 +152,18 @@ public class EchoServer extends Thread {
                     break;
                 }
                 analisePacket(buf, packet.getAddress(), packet.getPort());
-            } catch (IOException e) {
-                e.printStackTrace();
             }
-        }
-        for (Thread t: threads) {
-            try {
-                t.join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+            for (Thread t: threads) {
+                try {
+                    t.join();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
+            packetLogs.close();
+            socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        socket.close();
     }
 }

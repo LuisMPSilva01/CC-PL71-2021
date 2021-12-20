@@ -6,25 +6,32 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 
-class DataReciever implements Runnable {
+class DataReceiver implements Runnable {
     private final DatagramSocket socket;
     private int port;
     private InetAddress address;
     private final String fileName;
     private final String newFileName;
+    private Logs logs;
+    private boolean showPL;
+    private PacketLogs packetLogs;
 
-    public DataReciever(InetAddress address,int serverPort,String fileName,String newFileName) throws SocketException{
+    public DataReceiver(InetAddress address,int serverPort,String fileName,String newFileName,Logs logs,boolean showPL,PacketLogs packetLogs) throws SocketException{
         this.address=address;
         this.port=serverPort;
         this.socket = new DatagramSocket();
         this.fileName=fileName;
         this.newFileName = newFileName;
+        this.logs=logs;
+        this.showPL=showPL;
+        if(showPL) this.packetLogs=packetLogs;
     }
 
     public void sendPacket(UDP_Packet p) throws IOException {
         byte[] buf = p.getContent();
         DatagramPacket packet = new DatagramPacket(buf,buf.length, address, port);
         socket.send(packet);
+        if(showPL) this.packetLogs.sent(p.toLogInput());
     }
 
     public int sendRRQ() throws IOException {
@@ -44,11 +51,15 @@ class DataReciever implements Runnable {
             socket.receive(packet);
             WRQFile pacote = new WRQFile(buf);
             if(pacote.isOK()){
+                if(showPL) this.packetLogs.received(pacote.toLogInput());
                 this.address = packet.getAddress();
                 this.port = packet.getPort();
                 return pacote;
             }
-            else return null;
+            else {
+                if(showPL) this.packetLogs.received("Bad WRQFile");
+                return null;
+            }
         }
         catch (SocketTimeoutException e) {
             return null;
@@ -89,13 +100,14 @@ class DataReciever implements Runnable {
                 this.socket.receive(packet); //Receber pacote
                 DATA pacote = new DATA(buf);
                 if (pacote.isOK()) { //Verifica se é um pacote de DATA intacto
+                    if(showPL) this.packetLogs.received(pacote.toLogInput());
                     int blocoPacote = pacote.getNBloco();
                     sendFirst=false;
                     sendPacket(new ACK(blocoPacote));
                     if (blocoPacote>=next&&!containsBlock(waitingToWrite,blocoPacote)) {
                         waitingToWrite.add(new DataPlusBlock(pacote.getConteudo(),blocoPacote));
                     }
-                }
+                } else if(showPL) this.packetLogs.received("Bad DATABLOCK");
             } catch (SocketTimeoutException ste){
                 if(sendFirst) sendPacket(new ACK(-1));
             }
@@ -110,6 +122,7 @@ class DataReciever implements Runnable {
             int nrBlocks = sendRRQ();
             writeFile(nrBlocks);
             this.socket.close();
+            this.logs.recebido(newFileName);
         }
         catch (IOException e) {
             e.printStackTrace();

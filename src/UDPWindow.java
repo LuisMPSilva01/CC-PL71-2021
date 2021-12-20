@@ -64,8 +64,8 @@ public class UDPWindow {
 
     private byte[] getNextBlock() throws IOException {
         byte[] blockContent;
-        if(last==maxSize){
-            blockContent = new byte[(int) Math.IEEEremainder(filesize,BlockSize)]; //Ultimo bloco
+        if(last==maxSize-1){
+            blockContent = new byte[(int) filesize % BlockSize]; //Ultimo bloco
         }
         else{
         blockContent = new byte[BlockSize]; //Outros

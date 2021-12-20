@@ -55,4 +55,9 @@ public class DATA implements UDP_Packet{
         return  this.bytes[4]==4
                 && getHashCode() == Arrays.hashCode(Arrays.copyOfRange(bytes, 4,1+4+4+4+getblockSize()));
     }
+
+    @Override
+    public String toLogInput() {
+        return ("DATA("+getNBloco()+")");
+    }
 }

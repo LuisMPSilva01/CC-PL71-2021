@@ -1,4 +1,5 @@
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -15,8 +16,8 @@ public class UDPClientTest {
         }else {
             folder = new File("C:\\Users\\Acer\\Desktop\\teste1");
         }
-
-        EchoClient client = new EchoClient(8888, InetAddress.getByName("localhost"),folder);
+        Logs logs = new Logs("C:\\Users\\Acer\\Desktop\\teste1","myself");
+        EchoClient client = new EchoClient(8888, InetAddress.getByName("localhost"),folder,logs,false);
         client.start();
     }
 }

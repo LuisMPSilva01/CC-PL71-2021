@@ -24,4 +24,10 @@ public class FIN implements UDP_Packet{
     public boolean isOK() {
         return 7==bytes[4];
     }
+
+    @Override
+    public String toLogInput() {
+        return "FIN";
+    }
+
 }

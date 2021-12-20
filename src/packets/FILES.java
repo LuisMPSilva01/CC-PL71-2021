@@ -63,4 +63,11 @@ public class FILES implements UDP_Packet{
     public boolean isOK() {
         return 6==bytes[0];
     }
+
+    @Override
+    public String toLogInput() {
+        return ("FILES("+getNbloco()+")");
+    }
+
+
 }
