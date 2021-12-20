@@ -1,6 +1,7 @@
 package packets;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.Map;
 
 public class FILES implements UDP_Packet{
@@ -8,17 +9,13 @@ public class FILES implements UDP_Packet{
     public FILES(byte[] bytes) {
         this.bytes=bytes.clone();
     }
-    public FILES(Map<String, LongTuple> m, int nrBlock, int totalBlocks){
+    public FILES(Map<String, LongTuple> m, int nrBlock){
         bytes= new byte[1200];
-        bytes[0] = 6;
-        int pos = 1;
+        bytes[4] = 6;
+        int pos = 5;
 
         byte[] nrBloc = ByteBuffer.allocate(4).putInt(nrBlock).array();
         System.arraycopy(nrBloc, 0, bytes, pos, 4); //block#
-        pos += 4;
-
-        byte[] totalBloc = ByteBuffer.allocate(4).putInt(totalBlocks).array();
-        System.arraycopy(totalBloc, 0, bytes, pos, 4); //total blocks
         pos += 4;
 
         for(Map.Entry<String, LongTuple> entry: m.entrySet()){
@@ -38,6 +35,14 @@ public class FILES implements UDP_Packet{
             pos += 8;
         }
         bytes[pos] = -1;
+        byte[] hashcode = ByteBuffer.allocate(4).putInt(Arrays.hashCode(Arrays.copyOfRange(bytes, 4,1200))).array();
+        System.arraycopy(hashcode, 0, bytes, 0, 4); //Copiar o número do bloco
+    }
+
+    public int getHashCode(){
+        byte[] tmp = new byte[4];
+        System.arraycopy(this.bytes, 0, tmp, 0, 4);
+        return ByteBuffer.wrap(tmp).getInt();
     }
 
     @Override
@@ -55,13 +60,15 @@ public class FILES implements UDP_Packet{
         return buf.array();
     }
 
-    public int getNbloco(){
-        return 0;
+    public int getNbloco() {
+        byte[] tmp = new byte[4];
+        System.arraycopy(this.bytes, 5, tmp, 0, 4);
+        return ByteBuffer.wrap(tmp).getInt();
     }
 
     @Override
     public boolean isOK() {
-        return 6==bytes[0];
+        return 6==bytes[4];
     }
 
     @Override

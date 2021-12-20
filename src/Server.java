@@ -1,5 +1,4 @@
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.*;
 import java.util.*;
@@ -60,10 +59,7 @@ public class Server extends Thread {
         return block + 1;
     }
 
-    public void FT_Rapid(InetAddress address, int port) throws IOException {
-        Map<String, LongTuple> map = new HashMap<>();
-        getFilesInFolder(map, folder, "");
-        int nrBlocksFILES = nrBlocksFILES(map);
+    public void sendFiles(Map<String, LongTuple> map,InetAddress address, int port) throws IOException {
         int total = 9, block = 0;
         Map<String, LongTuple> FILES = new HashMap<>();
 
@@ -73,39 +69,43 @@ public class Server extends Thread {
             }
             else{
                 //send packet
-                block++;
-                FILES files = new FILES(FILES, block, nrBlocksFILES);
+                FILES files = new FILES(FILES, block);
                 do {
                     sendPacket(files, address, port);
-                } while (waitACK()!=0);
+                } while (waitACK()!=block);
+                block++;
                 FILES.clear();
                 total = 9 + 4 + entry.getKey().length() + 8 + 8;
             }
             FILES.put(entry.getKey(), entry.getValue());
         }
-        block ++;
-        FILES files = new FILES(FILES, block, nrBlocksFILES);
+        FILES files = new FILES(FILES, block);
         do {
             sendPacket(files, address, port);
-        } while (waitACK()!=0);
+            System.out.println("yo");
+        } while (waitACK()!=block);
     }
 
-    public void sendFolderName(InetAddress address, int port) throws IOException {
+    public Map<String, LongTuple> sendFolderName(InetAddress address, int port) throws IOException {
+        Map<String, LongTuple> map = new HashMap<>();
+        getFilesInFolder(map, folder, "");
         do {
-            sendPacket(new FolderName(folder.getAbsolutePath(),1),address,port);
+            sendPacket(new FolderName(folder.getAbsolutePath(),nrBlocksFILES(map)),address,port);
         } while (waitACK()!=-1);
+        return map;
     }
 
     public int waitACK() throws IOException {
-        byte[] buf = new byte[1200];
-        DatagramPacket packet = new DatagramPacket(buf, buf.length);
         try {
+            byte[] buf = new byte[1200];
+            DatagramPacket packet = new DatagramPacket(buf, buf.length);
             socket.receive(packet);
             ACK ack = new ACK(buf);
             if(ack.isOK()){
                 if(showPL) packetLogs.received(ack.toLogInput());
                 return ack.getNBloco();
             } else {
+                if(showPL) packetLogs.received("bad ACK");
                 return -2;
             }
         }
@@ -118,8 +118,8 @@ public class Server extends Thread {
     public void analisePacket(byte[] array, InetAddress address, int port) throws IOException {
         UDP_Packet udpPacket;
         if((udpPacket=new RRQFolder(array)).isOK()){
-            sendFolderName(address,port);
-            FT_Rapid(address, port);
+            Map<String, LongTuple> map = sendFolderName(address,port);
+            sendFiles(map,address, port);
             this.socket.setSoTimeout(2000); // Sendo o RRQFolder pode ser a ultima operação depois do FIN, este timeout vai fazer com que o servidor feche caso o fin se perca
         } else{
             if ((udpPacket=new RRQFile(array)).isOK()){

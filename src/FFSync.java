@@ -101,7 +101,7 @@ public class FFSync {
         */
 
         int defaultPort=8888;
-        int SO =0; //SO==0 LINUX || ELSE WINDOWS
+        int SO =1; //SO==0 LINUX || ELSE WINDOWS
         boolean showPL = showPacketLogs();
         try {
 

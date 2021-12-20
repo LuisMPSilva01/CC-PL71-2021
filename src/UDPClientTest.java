@@ -7,7 +7,7 @@ public class UDPClientTest {
         System.out.println("Client Started");
         int SO=0;
         File folder;
-        if (SO==0){
+        if (SO==1){
             folder = new File("/home/ray/Downloads/teste2");
         }else {
             folder = new File("C:\\Users\\Acer\\Desktop\\teste1");

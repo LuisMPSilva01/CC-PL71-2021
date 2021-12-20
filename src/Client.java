@@ -37,31 +37,34 @@ public class Client extends Thread{
         if(showPL) this.packetLogs.sent(p.toLogInput());
     }
 
-    Map<String, LongTuple> decodeFILES(byte[] buf) {
+    Map<String, LongTuple> decodeFILES(List<FILES> list) {
         Map<String, LongTuple> m = new HashMap<>();
 
-        for(int i = 9; i < buf.length && buf[i] != -1; ){
-            byte[] s_fn = new byte[4];
-            System.arraycopy(buf, i, s_fn, 0, 4);
-            int size_filename = ByteBuffer.wrap(s_fn).getInt();
-            i += 4;
+        for (FILES f:list) {
+            byte[] buf = f.getContent();
+            for (int i = 9; i < buf.length && buf[i] != -1; ) {
+                byte[] s_fn = new byte[4];
+                System.arraycopy(buf, i, s_fn, 0, 4);
+                int size_filename = ByteBuffer.wrap(s_fn).getInt();
+                i += 4;
 
-            String filename = new String(buf, i, size_filename, StandardCharsets.UTF_8);
-            i += size_filename;
+                String filename = new String(buf, i, size_filename, StandardCharsets.UTF_8);
+                i += size_filename;
 
-            byte[] fs = new byte[8];
-            System.arraycopy(buf, i, fs, 0, 8);
-            Long filesize = ByteBuffer.wrap(fs).getLong();
-            i += 8;
+                byte[] fs = new byte[8];
+                System.arraycopy(buf, i, fs, 0, 8);
+                Long filesize = ByteBuffer.wrap(fs).getLong();
+                i += 8;
 
-            byte[] lmd = new byte[8];
-            System.arraycopy(buf, i, lmd, 0, 8);
-            Long lastModifiedDate = ByteBuffer.wrap(lmd).getLong();
-            i += 8;
+                byte[] lmd = new byte[8];
+                System.arraycopy(buf, i, lmd, 0, 8);
+                Long lastModifiedDate = ByteBuffer.wrap(lmd).getLong();
+                i += 8;
 
-            LongTuple lt = new LongTuple(filesize, lastModifiedDate);
+                LongTuple lt = new LongTuple(filesize, lastModifiedDate);
 
-            m.put(filename, lt);
+                m.put(filename, lt);
+            }
         }
 
         return m;
@@ -95,14 +98,13 @@ public class Client extends Thread{
                 res.put(entry.getKey(), entry.getValue());
             }
         }
-
         return res;
     }
 
-    public void getFilesHandler(FILES pacote, File myFolder) throws IOException, InterruptedException {
+    public void getFilesHandler(List<FILES> list, File myFolder) throws IOException, InterruptedException {
         Map<String, LongTuple> mine = new HashMap<>();
         getFilesInFolder(mine, myFolder, "");
-        Map<String, LongTuple> other = decodeFILES(pacote.getContent());
+        Map<String, LongTuple> other = decodeFILES(list);
         Map<String, LongTuple> missing = partSynchronized(mine, other);
         Thread[] missingFiles = new Thread[missing.size()];
         int i=0;
@@ -132,19 +134,19 @@ public class Client extends Thread{
         }
     }
 
-    public FILES waitFILES(int nrBlocos) throws IOException{
+    public List<FILES> waitFILES(int nrBlocos) throws IOException{
         byte[] buf = new byte[1200];
         DatagramPacket packet = new DatagramPacket(buf, buf.length);
-
+        List<FILES> lista = new ArrayList<>();
         int nBloco=-1; //Numero
         boolean sendACK = true;
-
+        System.out.println(nrBlocos);
         while (true){ //Ciclo para esperar o pacote do FILES
             if(sendACK){  //Caso na iteração anterior tenha recebido o pacote errado, não vai enviar ack
                 sendPacket(new ACK(nBloco)); //Enviar o ack para desbloquear o FILES
             } else sendACK=true;
             nBloco++;
-            //if((nrblocks)==nBloco) break; //Caso seja o ultimo pacote sai do ciclo
+            if((nrBlocos)==nBloco) break; //Caso seja o ultimo pacote sai do ciclo
 
             try { //Caso de sucesso
                 this.socket.receive(packet); //Receber pacote
@@ -152,13 +154,13 @@ public class Client extends Thread{
                 if (pacote.isOK()) { //Verifica se é um pacote de FILES
                     if(showPL) this.packetLogs.received(pacote.toLogInput());
                     if (pacote.getNbloco()==nBloco) {
-                        sendPacket(new ACK(nBloco)); //Enviar o ack para desbloquear o FILES
-                        return new FILES(buf);
+                        lista.add(pacote);
                     } else {
                         sendACK=false;
                         nBloco--;
                     }
                 } else {
+                    if(showPL) this.packetLogs.received("Bad FILES block number");
                     nBloco--;
                 }
             } catch (SocketTimeoutException e) {
@@ -166,6 +168,7 @@ public class Client extends Thread{
                 nBloco--;
             }
         }
+        return lista;
     }
 
     public int waitFolderName(RRQFolder rrqf) throws IOException {
@@ -188,7 +191,7 @@ public class Client extends Thread{
         return fn.getFilesBlocks();
     }
 
-    public FILES waitFILESandName(RRQFolder rrqf){
+    public List<FILES> waitFILESandName(RRQFolder rrqf){
         try {
             int nBlocos=waitFolderName(rrqf); //Guarda o nome do folder
 
@@ -204,8 +207,7 @@ public class Client extends Thread{
 
         RRQFolder rrqf = new RRQFolder();
         try{
-            FILES files;
-            files=waitFILESandName(rrqf);
+            List<FILES> files=waitFILESandName(rrqf);
             
             getFilesHandler(files, folder);
 
