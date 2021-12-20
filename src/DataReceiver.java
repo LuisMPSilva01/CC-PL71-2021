@@ -62,6 +62,7 @@ class DataReceiver implements Runnable {
             }
         }
         catch (SocketTimeoutException e) {
+            if(showPL) this.packetLogs.timeOut("WRQFile");
             return null;
         }
     }
@@ -109,6 +110,7 @@ class DataReceiver implements Runnable {
                     }
                 } else if(showPL) this.packetLogs.received("Bad DATABLOCK");
             } catch (SocketTimeoutException ste){
+                if(showPL) this.packetLogs.timeOut("DATA packet");
                 if(sendFirst) sendPacket(new ACK(-1));
             }
         }

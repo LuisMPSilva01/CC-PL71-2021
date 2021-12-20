@@ -35,6 +35,15 @@ public class PacketLogs {
         }
     }
 
+    public void timeOut(String msg) throws IOException {
+        lock.lock();
+        try {
+            packetLogs.write(("Time Out: "+msg+"\n").getBytes());
+        } finally {
+            lock.unlock();
+        }
+    }
+
     public void close() throws IOException {
         lock.lock();
         try {

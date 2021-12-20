@@ -111,6 +111,7 @@ public class EchoServer extends Thread {
             }
         }
         catch (SocketTimeoutException e) {
+            if(showPL) this.packetLogs.timeOut("ACK");
             return -2;
         }
     }
@@ -148,7 +149,7 @@ public class EchoServer extends Thread {
                 try {
                     this.socket.receive(packet);
                 }catch (SocketTimeoutException ste) {
-                    System.out.println("Took to long to recieve fin");
+                    if(showPL) this.packetLogs.timeOut("FIN");
                     break;
                 }
                 analisePacket(buf, packet.getAddress(), packet.getPort());

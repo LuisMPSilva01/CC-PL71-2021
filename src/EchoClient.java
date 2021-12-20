@@ -164,6 +164,7 @@ public class EchoClient extends Thread{
                     nBloco--;
                 }
             } catch (SocketTimeoutException e) {
+                if(showPL) this.packetLogs.timeOut("FILES");
                 nBloco--;
             }
         }
@@ -177,7 +178,9 @@ public class EchoClient extends Thread{
             try {
                 sendPacket(rrqf);
                 this.socket.receive(packet);
-            }catch (SocketTimeoutException ignored){}
+            }catch (SocketTimeoutException ignored){
+                if(showPL) this.packetLogs.timeOut("Foldername");
+            }
             fn = new FolderName(buf);
             if(showPL) this.packetLogs.received("bad foldername");
         } while (!fn.isOK()); //Verificação do pacote

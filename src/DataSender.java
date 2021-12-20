@@ -63,6 +63,7 @@ class DataSender implements Runnable {
             }
         }
         catch (SocketTimeoutException e) {
+            if(showPL) this.packetLogs.timeOut("ACK");
             return -2;
         }
     }
@@ -104,6 +105,7 @@ class DataSender implements Runnable {
                     if (sendQueue.isEmpty()) moveOut = true;
                 } else if(showPL) this.packetLogs.received("Bad ack");
             } catch (SocketTimeoutException ste) {
+                if(showPL) this.packetLogs.timeOut("ACK");
                 sendQueue.add(windoh.getNext());
                 if (moveOut){
                     timeOuts--;
