@@ -5,7 +5,7 @@ import java.net.InetAddress;
 public class UDPClientTest {
     public static void main(String[] args) throws IOException {
         System.out.println("Client Started");
-        int SO=1;
+        int SO=0;
         File folder;
         if (SO==0){
             folder = new File("/home/ray/Downloads/teste2");

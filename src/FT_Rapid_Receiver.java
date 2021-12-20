@@ -82,8 +82,9 @@ class FT_Rapid_Receiver implements Runnable {
         int next=0;
 
         File f = new File(newFileName);
-        FileOutputStream output = new FileOutputStream(f, true);
+        f.delete();
         f.createNewFile(); //Unhandled
+        FileOutputStream output = new FileOutputStream(f, true);
 
         while (true) {
             try {
