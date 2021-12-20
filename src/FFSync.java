@@ -53,7 +53,7 @@ public class FFSync {
         Scanner sc= new Scanner(System.in);
 
         while (true){
-            System.out.println("Ensira a password (tamanho maximo 50, não digite números): ");
+            System.out.println("Insira a password (tamanho maximo 50, não digite números): ");
             String password = sc.next();
             if(passwordIsValida(password)){
                 byte[] bytesEnvio=password.getBytes(StandardCharsets.UTF_8);

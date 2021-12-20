@@ -86,10 +86,8 @@ public class EchoClient extends Thread{
         for(Map.Entry<String, LongTuple> entry: other.entrySet()){
             LongTuple lt;
             if((lt = mine.get(entry.getKey())) != null){
-                Long my_fileSize = lt.getA();
                 Long my_lmd = lt.getB();
-                Long fileSize = entry.getValue().getA();
-                Long lmd = entry.getValue().getA();
+                Long lmd = entry.getValue().getB();
 
                 if(my_lmd < lmd)
                     res.put(entry.getKey(), entry.getValue());
