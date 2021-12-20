@@ -13,7 +13,7 @@ public class Client extends Thread{
     private final int defaultPort;
     private String serverFolder;
     private File folder;
-    private final int SO=1; //Linux -> 0 | Windows -> everything else
+    private final int SO=0; //Linux -> 0 | Windows -> everything else
     private LogsMaker logs;
     private boolean showPL;
     private PacketLogs packetLogs;
