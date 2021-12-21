@@ -15,11 +15,8 @@ public class TCPClient implements Runnable{
         try {
             client = new Socket(this.address, 80);
             PrintWriter out = new PrintWriter(client.getOutputStream());
-            out.println("close");
+            out.write("close");
             out.flush();
-            client.shutdownInput();
-            client.shutdownOutput();
-            client.close();
         }
         catch (IOException ioe){
             ioe.printStackTrace();

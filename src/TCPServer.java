@@ -33,7 +33,8 @@ public class TCPServer implements Runnable{
             while(true){
                 Socket client = server.accept();
                 BufferedReader in = new BufferedReader(new InputStreamReader(client.getInputStream()));
-                if(in.readLine() == "close")
+                String s = in.readLine();
+                if(s.equals("close"))
                     break;
                 sendAnswer(client);
             }
