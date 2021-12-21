@@ -36,8 +36,8 @@ class FT_Rapid_Sender implements Runnable {
 
     public int sendWRQ(File file) throws IOException {
         int nrblocks = blocksNeeded(file.length());
-        socket.setSoTimeout(40);
-        int repetitions=4;
+        socket.setSoTimeout(100);
+        int repetitions=3;
         int ack;
         do {
             repetitions--;
