@@ -17,6 +17,7 @@ public class TCPClient implements Runnable{
             PrintWriter out = new PrintWriter(client.getOutputStream());
             out.write("close");
             out.flush();
+            out.close();
         }
         catch (IOException ioe){
             ioe.printStackTrace();
