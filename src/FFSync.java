@@ -100,7 +100,10 @@ public class FFSync {
             System.out.println("Formato errado, tente : FFSync pasta1 10.1.1.1");
             return;
         }
-        System.out.println("Ficheiro existe: "+Files.exists(Path.of(args[0]))); //Adicionar returns caso falso
+        if(!Files.exists(Path.of(args[0]))) {
+            System.out.println("Ficheiro não existe");
+            return;
+        }
         */
 
         int defaultPort=8888;
