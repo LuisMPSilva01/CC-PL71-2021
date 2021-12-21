@@ -81,7 +81,7 @@ class FT_Rapid_Sender implements Runnable {
         }
 
         boolean moveOut = false;
-        int timeOuts = windoh.getWindowSize()/2;
+        int timeOuts = Math.max(windoh.getWindowSize(),5);;
 
         Queue<DataPlusBlock> sendQueue = new LinkedList<>();
         while (!windoh.isEmpty()) {  //Repetições vai ser usado na ultima iteração para quebrar o ciclo caso não receba o ultimo ack(pode ter sido perdido)

@@ -2,6 +2,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Scanner;
 
 
@@ -94,8 +96,8 @@ public class FFSync {
 
     public static void main(String[] args) throws IOException {
 
-        //if(!isReachable(args)) return;
-        /*
+        if(!isReachable(args)) return;
+
         if(args.length!=2){
             System.out.println("Formato errado, tente : FFSync pasta1 10.1.1.1");
             return;
@@ -104,7 +106,7 @@ public class FFSync {
             System.out.println("Ficheiro não existe");
             return;
         }
-        */
+
 
         int defaultPort=8888;
         int SO =0; //SO==0 LINUX || ELSE WINDOWS
@@ -116,8 +118,8 @@ public class FFSync {
                 DatagramSocket socket = new DatagramSocket(defaultPort);
                 verificaPassword(socket,InetAddress.getByName(args[1]),defaultPort);
                 logs = new LogsMaker(args[0],args[1]);
-                Thread servidor = new Thread(new Server(socket,new File(args[0]),logs,showPL));
-                servidor.start();
+                //Thread servidor = new Thread(new Server(socket,new File(args[0]),logs,showPL));
+                //servidor.start();
 
                 Thread servidorTCP = new Thread(new TCPServer());
                 servidorTCP.start();
@@ -125,7 +127,7 @@ public class FFSync {
                 Thread cliente = new Thread(new Client(defaultPort, InetAddress.getByName(args[1]),new File(args[0]),logs,showPL));
                 cliente.start();
 
-                servidor.join();
+                //servidor.join();
                 cliente.join();
                 servidorTCP.join();
             } else { //Cenario de teste
