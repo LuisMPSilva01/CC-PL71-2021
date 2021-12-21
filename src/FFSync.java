@@ -116,6 +116,7 @@ public class FFSync {
                 Thread servidor = new Thread(new Server(socket,new File(args[0]),logs,showPL));
                 servidor.start();
 
+
                 Thread servidorTCP = new Thread(new TCPServer());
                 servidorTCP.start();
 
@@ -124,8 +125,14 @@ public class FFSync {
 
                 servidor.join();
                 cliente.join();
+                Thread clienteTCP = new Thread(new TCPClient(InetAddress.getByName(args[1])));
+                clienteTCP.start();
                 servidorTCP.join();
+                clienteTCP.join();
             } else { //Cenario de teste
+                Thread servidorTCP = new Thread(new TCPServer());
+                servidorTCP.start();
+                servidorTCP.join();
                 File folder1,folder2;
                 if (SO==0){
                     folder1 = new File("/home/ray/Downloads/teste3");
@@ -139,6 +146,7 @@ public class FFSync {
                 logs = new LogsMaker(args[0],args[1]);
                 Thread servidor1 = new Thread(new Server(socket1,folder1,logs,showPL));
                 servidor1.start();
+
 
                 Thread cliente1 = new Thread(new Client(8889, InetAddress.getByName("localhost"),folder1,logs,showPL)); //change
                 cliente1.start();
