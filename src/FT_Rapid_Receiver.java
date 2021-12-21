@@ -46,7 +46,7 @@ class FT_Rapid_Receiver implements Runnable {
         DatagramPacket packet = new DatagramPacket(buf, buf.length);
 
         try {
-            socket.setSoTimeout(300);
+            socket.setSoTimeout(100);
             socket.receive(packet);
             WRQFile pacote = new WRQFile(buf);
             if(pacote.isOK()){
@@ -75,7 +75,7 @@ class FT_Rapid_Receiver implements Runnable {
 
     public void writeFile(int nrblocks) throws IOException{
         boolean sendFirst = true;
-        socket.setSoTimeout(200);
+        socket.setSoTimeout(50);
 
         sendPacket(new ACK(-1));
         Queue<DataPlusBlock> waitingToWrite = new PriorityQueue<>();
