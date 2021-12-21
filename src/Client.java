@@ -70,10 +70,10 @@ public class Client extends Thread{
         return m;
     }
 
-    public static void getFilesInFolder(Map<String, LongTuple> m, File folder, String path) {
+    public void getFilesInFolder(Map<String, LongTuple> m, File folder, String path) {
         for (File fileEntry : Objects.requireNonNull(folder.listFiles())) {
             if (fileEntry.isDirectory()) {
-                getFilesInFolder(m, fileEntry,(path+fileEntry.getName()+"||"));
+                getFilesInFolder(m, fileEntry,(path+fileEntry.getName()+"/"));
 
             } else {
                 LongTuple lt = new LongTuple(fileEntry.length(), fileEntry.lastModified());
@@ -82,7 +82,7 @@ public class Client extends Thread{
         }
     }
 
-    public static Map<String, LongTuple> partSynchronized(Map<String, LongTuple> mine, Map<String, LongTuple> other){
+    public Map<String, LongTuple> partSynchronized(Map<String, LongTuple> mine, Map<String, LongTuple> other){
         Map<String, LongTuple> res = new HashMap<>();
 
         for(Map.Entry<String, LongTuple> entry: other.entrySet()){
@@ -101,11 +101,77 @@ public class Client extends Thread{
         return res;
     }
 
+    public boolean isInSubfolder(String fileName){
+        boolean r = false;
+        char[] chars = fileName.toCharArray();
+        for(int i = 0; i < chars.length; i++){
+            if(chars[i] == '/'){
+                r = true;
+                break;
+            }
+
+        }
+        return r;
+    }
+
+    public String getSubfolder(String fileName){
+        char[] chars = fileName.toCharArray();
+        int i;
+        for(i = 0; i < chars.length; i++)
+            if(chars[i] == '/')
+                break;
+
+        char[] tmp = new char[i];
+        System.arraycopy(chars, 0, tmp, 0, i);
+
+        String s = String.valueOf(tmp);
+        return s;
+    }
+
+    public String removeSubfolder(String fileName){
+        char[] chars = fileName.toCharArray();
+        int i;
+        for(i = 0; i < chars.length; i++)
+            if(chars[i] == '/'){
+                i++;
+                break;
+            }
+
+        char[] tmp = new char[chars.length - i];
+        System.arraycopy(chars, i, tmp, 0, chars.length - i);
+
+        String s = String.valueOf(tmp);
+        return s;
+    }
+
+    public void partSynchronized(Map<String, LongTuple> missing){
+        for (Map.Entry<String, LongTuple> entry : missing.entrySet()) {
+            System.out.println("file: " + entry.getKey() + " | subfolder: " + isInSubfolder(entry.getKey()));
+
+            String file = entry.getKey();
+            String sf = "";
+            while (isInSubfolder(file)) {
+                if (sf.equals(""))
+                    sf += getSubfolder(file);
+                else
+                    sf += "/" + getSubfolder(file);
+                File subfolder = new File(this.folder.getAbsolutePath() + "/" + sf);
+                System.out.println("subfolder: " + subfolder.getAbsolutePath() + " | exists: " + subfolder.exists());
+                System.out.println("without folder: " + removeSubfolder(file) + "\n");
+                if (!subfolder.exists()) {
+                    subfolder.mkdirs();
+                }
+                file = removeSubfolder(file);
+            }
+        }
+    }
+
     public void getFilesHandler(List<FILES> list, File myFolder) throws IOException, InterruptedException {
         Map<String, LongTuple> mine = new HashMap<>();
         getFilesInFolder(mine, myFolder, "");
         Map<String, LongTuple> other = decodeFILES(list);
         Map<String, LongTuple> missing = partSynchronized(mine, other);
+        //createSubfolders(missing);
         Thread[] missingFiles = new Thread[missing.size()];
         int i=0;
         System.out.println("size: " + missing.size());

@@ -31,10 +31,10 @@ public class Server extends Thread {
         if(showPL) packetLogs.sent(p.toLogInput());
     }
 
-    public static void getFilesInFolder(Map<String, LongTuple> m, File folder, String path) {
+    public void getFilesInFolder(Map<String, LongTuple> m, File folder, String path) {
         for (File fileEntry : Objects.requireNonNull(folder.listFiles())) {
             if (fileEntry.isDirectory()) {
-                getFilesInFolder(m, fileEntry,(path+fileEntry.getName()+"||"));
+                getFilesInFolder(m, fileEntry,(path+fileEntry.getName()+"/"));
             } else {
                 LongTuple lt = new LongTuple(fileEntry.length(), fileEntry.lastModified());
                 m.put(path + fileEntry.getName(), lt);
