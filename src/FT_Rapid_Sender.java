@@ -36,6 +36,7 @@ class FT_Rapid_Sender implements Runnable {
 
     public int sendWRQ(File file) throws IOException {
         int nrblocks = blocksNeeded(file.length());
+        socket.setSoTimeout(20);
         do {
             sendPacket(new WRQFile(nrblocks), address, port);
         } while (waitACK()!=-1);

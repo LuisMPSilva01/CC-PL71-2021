@@ -80,10 +80,12 @@ public class Server extends Thread {
             FILES.put(entry.getKey(), entry.getValue());
         }
         FILES files = new FILES(FILES, block);
+        int repetitions=5;
         do {
             sendPacket(files, address, port);
             System.out.println("yo");
-        } while (waitACK()!=block);
+            repetitions--;
+        } while (waitACK()!=block||repetitions==0);
     }
 
     public Map<String, LongTuple> sendFolderName(InetAddress address, int port) throws IOException {
@@ -153,6 +155,7 @@ public class Server extends Thread {
                 }
                 analisePacket(buf, packet.getAddress(), packet.getPort());
             }
+
             for (Thread t: threads) {
                 try {
                     t.join();

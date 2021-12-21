@@ -75,7 +75,7 @@ class FT_Rapid_Receiver implements Runnable {
 
     public void writeFile(int nrblocks) throws IOException{
         boolean sendFirst = true;
-        socket.setSoTimeout(50);
+        socket.setSoTimeout(200);
 
         sendPacket(new ACK(-1));
         Queue<DataPlusBlock> waitingToWrite = new PriorityQueue<>();
