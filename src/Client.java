@@ -144,7 +144,7 @@ public class Client extends Thread{
         return s;
     }
 
-    public void partSynchronized(Map<String, LongTuple> missing){
+    public void createSubfolders(Map<String, LongTuple> missing){
         for (Map.Entry<String, LongTuple> entry : missing.entrySet()) {
             System.out.println("file: " + entry.getKey() + " | subfolder: " + isInSubfolder(entry.getKey()));
 
@@ -171,7 +171,7 @@ public class Client extends Thread{
         getFilesInFolder(mine, myFolder, "");
         Map<String, LongTuple> other = decodeFILES(list);
         Map<String, LongTuple> missing = partSynchronized(mine, other);
-        //createSubfolders(missing);
+        createSubfolders(missing);
         Thread[] missingFiles = new Thread[missing.size()];
         int i=0;
         System.out.println("size: " + missing.size());

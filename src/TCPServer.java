@@ -7,11 +7,7 @@ import java.nio.charset.StandardCharsets;
 public class TCPServer implements Runnable{
     public TCPServer(){}
 
-    private static boolean sendAnswer(Socket client) throws IOException{
-        BufferedReader in = new BufferedReader(new InputStreamReader(client.getInputStream()));
-
-        if(in.readLine() == "close")
-            return true;
+    private void sendAnswer(Socket client) throws IOException{
         OutputStream clientOutput = client.getOutputStream();
         clientOutput.write("HTTP/1.1 200 OK\r\n".getBytes());
         clientOutput.write(("ContentType: text/html\r\n").getBytes());
@@ -19,14 +15,14 @@ public class TCPServer implements Runnable{
 
         String line;
         while ((line = br.readLine()) != null) {
-            //line += "<br>";
             clientOutput.write(line.getBytes());
             clientOutput.write("\r\n\r\n".getBytes());
         }
 
         clientOutput.flush();
+        br.close();
+        clientOutput.close();
         client.close();
-        return false;
     }
 
     public void run(){
@@ -36,9 +32,10 @@ public class TCPServer implements Runnable{
 
             while(true){
                 Socket client = server.accept();
-                boolean b = sendAnswer(client);
-                if(b == false)
+                BufferedReader in = new BufferedReader(new InputStreamReader(client.getInputStream()));
+                if(in.readLine() == "close")
                     break;
+                sendAnswer(client);
             }
         }
         catch(IOException ioe){
