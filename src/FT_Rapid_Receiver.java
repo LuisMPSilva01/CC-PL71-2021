@@ -46,7 +46,7 @@ class FT_Rapid_Receiver implements Runnable {
         DatagramPacket packet = new DatagramPacket(buf, buf.length);
 
         try {
-            socket.setSoTimeout(100);
+            socket.setSoTimeout(300);
             socket.receive(packet);
             WRQFile pacote = new WRQFile(buf);
             if(pacote.isOK()){
