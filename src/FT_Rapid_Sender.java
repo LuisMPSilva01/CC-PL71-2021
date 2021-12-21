@@ -36,10 +36,15 @@ class FT_Rapid_Sender implements Runnable {
 
     public int sendWRQ(File file) throws IOException {
         int nrblocks = blocksNeeded(file.length());
+        socket.setSoTimeout(100);
+        int repetitions=3;
+        int ack;
         do {
+            repetitions--;
             sendPacket(new WRQFile(nrblocks), address, port);
-        } while (waitACK()!=-1);
-        return nrblocks;
+        } while ((ack=waitACK())!=-1&&repetitions!=0);
+        if(ack==-1) return nrblocks;
+        else return -1;
     }
 
     public int blocksNeeded(Long l){
@@ -73,7 +78,7 @@ class FT_Rapid_Sender implements Runnable {
     }
 
     public void sendFile(String fileName, int nBlocos, InetAddress address, int port) throws IOException{
-        socket.setSoTimeout(10);
+        socket.setSoTimeout(15);
         SlidingWindow windoh = new SlidingWindow(defaultWindowSize,nBlocos,fileName,datablock);
 
         for (int i=0;i<windoh.getWindowSize();i++) { //Sends first wave
@@ -81,7 +86,7 @@ class FT_Rapid_Sender implements Runnable {
         }
 
         boolean moveOut = false;
-        int timeOuts = windoh.getWindowSize()/2;
+        int timeOuts = Math.max(windoh.getWindowSize(),5);
 
         Queue<DataPlusBlock> sendQueue = new LinkedList<>();
         while (!windoh.isEmpty()) {  //Repetições vai ser usado na ultima iteração para quebrar o ciclo caso não receba o ultimo ack(pode ter sido perdido)
@@ -118,9 +123,11 @@ class FT_Rapid_Sender implements Runnable {
         try {
             File f = new File(this.fileName);
             int nrBlocks = sendWRQ(f);
-            sendFile(fileName,nrBlocks,address,port);
-            this.socket.close();
-            logs.enviado(fileName);
+            if(nrBlocks!=-1){
+                sendFile(fileName,nrBlocks,address,port);
+                this.socket.close();
+                logs.enviado(fileName);
+            }
         }
         catch (IOException e) {
             e.printStackTrace();

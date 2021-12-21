@@ -76,7 +76,7 @@ public class SlidingWindow {
     }
 
     public boolean moveOut(){
-        return maxSize<=window.size();
+        return windowSize>window.size()||windowSize<5;
     }
 
     public boolean containsBlock(int nBloco){
