@@ -93,6 +93,7 @@ class FT_Rapid_Sender implements Runnable {
             }
 
             try {
+                moveOut=windoh.moveOut();
                 byte[] dataRecieved = new byte[1200];
                 DatagramPacket packet = new DatagramPacket(dataRecieved, 1200);
                 socket.receive(packet);
@@ -101,7 +102,6 @@ class FT_Rapid_Sender implements Runnable {
                     if(showPL) this.packetLogs.received(ack.toLogInput());
                     int ackNumber = ack.getNBloco();
                     sendQueue = windoh.update(ackNumber);
-                    if (sendQueue.isEmpty()) moveOut = true;
                 } else if(showPL) this.packetLogs.received("Bad ack");
             } catch (SocketTimeoutException ste) {
                 if(showPL) this.packetLogs.timeOut("ACK");

@@ -75,6 +75,10 @@ public class SlidingWindow {
         return blockContent;
     }
 
+    public boolean moveOut(){
+        return maxSize<=window.size();
+    }
+
     public boolean containsBlock(int nBloco){
         for(DataPlusBlock dpb : window){
             if (dpb.getBlock()==nBloco) return true;
