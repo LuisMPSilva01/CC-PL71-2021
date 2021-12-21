@@ -101,7 +101,7 @@ public class FFSync {
         */
 
         int defaultPort=8888;
-        int SO =1; //SO==0 LINUX || ELSE WINDOWS
+        int SO =0; //SO==0 LINUX || ELSE WINDOWS
         boolean showPL = showPacketLogs();
         try {
 
@@ -113,11 +113,15 @@ public class FFSync {
                 Thread servidor = new Thread(new Server(socket,new File(args[0]),logs,showPL));
                 servidor.start();
 
+                Thread servidorTCP = new Thread(new TCPServer());
+                servidorTCP.start();
+
                 Thread cliente = new Thread(new Client(defaultPort, InetAddress.getByName(args[1]),new File(args[0]),logs,showPL));
                 cliente.start();
 
                 servidor.join();
                 cliente.join();
+                servidorTCP.join();
             } else { //Cenario de teste
                 File folder1,folder2;
                 if (SO==0){
