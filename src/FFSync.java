@@ -44,31 +44,34 @@ public class FFSync {
 
     public static void verificaPassword(DatagramSocket socket, InetAddress address, int port) throws IOException {
         Scanner sc= new Scanner(System.in);
-
+        socket.setSoTimeout(20000);
         while (true){
-            System.out.println("Insira a password (tamanho maximo 50, não digite números): ");
-            String password = sc.next();
-            if(passwordIsValida(password)){
-                byte[] bytesEnvio=password.getBytes(StandardCharsets.UTF_8);
-                DatagramPacket enviado = new DatagramPacket(bytesEnvio,bytesEnvio.length,address,port);
-                socket.send(enviado);
+            try {
+                System.out.println("Insira a password (tamanho maximo 50, não digite números): ");
+                String password = sc.next();
+                if (passwordIsValida(password)) {
+                    byte[] bytesEnvio = password.getBytes(StandardCharsets.UTF_8);
+                    DatagramPacket enviado = new DatagramPacket(bytesEnvio, bytesEnvio.length, address, port);
+                    socket.send(enviado);
 
-                byte[] bytesRecebidos = new byte[50];
-                DatagramPacket recebido = new DatagramPacket(bytesRecebidos,bytesRecebidos.length,address,port);
-                socket.receive(recebido);
-                String teste = new String(retiraZeros(bytesRecebidos));
-                System.out.println("Teste:" + teste + " | Password:" +password);
-                if(password.equals(new String(retiraZeros(bytesRecebidos)))){
-                    socket.send(enviado); //Enviar extras para confirmar que o parceiro recebe
-                    socket.send(enviado); //Enviar extras para confirmar que o parceiro recebe
-                    socket.send(enviado); //Enviar extras para confirmar que o parceiro recebe
-                    return;
+                    byte[] bytesRecebidos = new byte[50];
+                    DatagramPacket recebido = new DatagramPacket(bytesRecebidos, bytesRecebidos.length, address, port);
+                    socket.receive(recebido);
+                    String teste = new String(retiraZeros(bytesRecebidos));
+                    System.out.println("Teste:" + teste + " | Password:" + password);
+                    if (password.equals(new String(retiraZeros(bytesRecebidos)))) {
+                        socket.send(enviado); //Enviar extras para confirmar que o parceiro recebe
+                        socket.send(enviado); //Enviar extras para confirmar que o parceiro recebe
+                        socket.send(enviado); //Enviar extras para confirmar que o parceiro recebe
+                        return;
+                    } else {
+                        System.out.println("Password errada, tente outra vez");
+                    }
+                } else {
+                    System.out.println("Formato errado, tente outra vez");
                 }
-                else {
-                    System.out.println("Password errada, tente outra vez");
-                }
-            } else{
-                System.out.println("Formato errado, tente outra vez");
+            } catch (SocketTimeoutException ste){
+                System.out.println("Não recebi nenhuma password, tente outra vez");
             }
         }
     }
