@@ -6,7 +6,7 @@ public class UDPserverTEST {
     public static void main(String[] args) throws IOException {
         System.out.println("SERVER STARTED");
 
-        int SO =1;
+        int SO =0;
         File folder;
         if (SO==0){
             folder = new File("/home/ray/Downloads/teste3");
