@@ -38,12 +38,12 @@ class FT_Rapid_Sender implements Runnable {
         int nrblocks = blocksNeeded(file.length());
         socket.setSoTimeout(20);
         int repetitions=4;
-        int bloco;
+        int ack;
         do {
             repetitions--;
             sendPacket(new WRQFile(nrblocks), address, port);
-        } while ((bloco=waitACK())!=-1&&repetitions!=0);
-        if(bloco==-1) return nrblocks;
+        } while ((ack=waitACK())!=-1&&repetitions!=0);
+        if(ack==-1) return nrblocks;
         else return -1;
     }
 
