@@ -42,7 +42,7 @@ class FT_Rapid_Sender implements Runnable {
         do {
             repetitions--;
             sendPacket(new WRQFile(nrblocks), address, port);
-        } while ((bloco=waitACK())!=-1||repetitions==0);
+        } while ((bloco=waitACK())!=-1&&repetitions!=0);
         if(bloco==-1) return nrblocks;
         else return -1;
     }
