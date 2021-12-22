@@ -11,11 +11,13 @@ public class FFSync {
 
     public static boolean isReachable(String[] args) throws IOException {
         for (int i=1;i<args.length;i++){ //Verificação de conexão
-            InetAddress inet=InetAddress.getByName(args[i]);
-            if(!inet.isReachable(500)){
-                System.out.println("The following ip address is unreachable:" + args[i]);
-                return false;
-            }
+            try {
+                InetAddress inet=InetAddress.getByName(args[i]);
+                if(!inet.isReachable(500)){
+                    System.out.println("The following ip address is unreachable:" + args[i]);
+                    return false;
+                }
+            } catch (IOException ioe) {return false;}
         }
         return true;
     }
