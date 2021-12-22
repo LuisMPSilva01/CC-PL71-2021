@@ -15,9 +15,9 @@ public class Client extends Thread{
     private final InetAddress address;
     private final int defaultPort;
     private String serverFolder;
-    private File folder;
-    private LogsMaker logs;
-    private boolean showPL;
+    private final File folder;
+    private final LogsMaker logs;
+    private final boolean showPL;
     private PacketLogs packetLogs;
 
 
@@ -55,12 +55,12 @@ public class Client extends Thread{
 
                 byte[] fs = new byte[8];
                 System.arraycopy(buf, i, fs, 0, 8);
-                Long filesize = ByteBuffer.wrap(fs).getLong();
+                long filesize = ByteBuffer.wrap(fs).getLong();
                 i += 8;
 
                 byte[] lmd = new byte[8];
                 System.arraycopy(buf, i, lmd, 0, 8);
-                Long lastModifiedDate = ByteBuffer.wrap(lmd).getLong();
+                long lastModifiedDate = ByteBuffer.wrap(lmd).getLong();
                 i += 8;
 
                 LongTuple lt = new LongTuple(filesize, lastModifiedDate);
@@ -90,8 +90,8 @@ public class Client extends Thread{
         for(Map.Entry<String, LongTuple> entry: other.entrySet()){
             LongTuple lt;
             if((lt = mine.get(entry.getKey())) != null){
-                Long my_lmd = lt.getB();
-                Long lmd = entry.getValue().getB();
+                long my_lmd = lt.getB();
+                long lmd = entry.getValue().getB();
 
                 if(my_lmd < lmd)
                     res.put(entry.getKey(), entry.getValue());
@@ -106,8 +106,8 @@ public class Client extends Thread{
     public boolean isInSubfolder(String fileName){
         boolean r = false;
         char[] chars = fileName.toCharArray();
-        for(int i = 0; i < chars.length; i++){
-            if(chars[i] == '/'){
+        for (char aChar : chars) {
+            if (aChar == '/') {
                 r = true;
                 break;
             }
@@ -125,8 +125,7 @@ public class Client extends Thread{
         char[] tmp = new char[i];
         System.arraycopy(chars, 0, tmp, 0, i);
 
-        String s = String.valueOf(tmp);
-        return s;
+        return String.valueOf(tmp);
     }
 
     public String removeSubfolder(String fileName){
@@ -141,19 +140,18 @@ public class Client extends Thread{
         char[] tmp = new char[chars.length - i];
         System.arraycopy(chars, i, tmp, 0, chars.length - i);
 
-        String s = String.valueOf(tmp);
-        return s;
+        return String.valueOf(tmp);
     }
 
     public void createSubfolders(Map<String, LongTuple> missing){
         for (Map.Entry<String, LongTuple> entry : missing.entrySet()) {
             String file = entry.getKey();
-            String sf = "";
+            StringBuilder sf = new StringBuilder();
             while (isInSubfolder(file)) {
-                if (sf.equals(""))
-                    sf += getSubfolder(file);
+                if (sf.toString().equals(""))
+                    sf.append(getSubfolder(file));
                 else
-                    sf += "/" + getSubfolder(file);
+                    sf.append("/").append(getSubfolder(file));
                 File subfolder = new File(this.folder.getAbsolutePath() + "/" + sf);
                 if (!subfolder.exists()) {
                     subfolder.mkdirs();
