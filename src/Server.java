@@ -1,9 +1,12 @@
+import packets.*;
+
 import java.io.File;
 import java.io.IOException;
-import java.net.*;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketTimeoutException;
 import java.util.*;
-
-import packets.*;
 
 public class Server extends Thread {
     private final DatagramSocket socket;
