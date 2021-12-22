@@ -1,7 +1,6 @@
 package packets;
 
 import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 public class RRQFolder implements UDP_Packet {
