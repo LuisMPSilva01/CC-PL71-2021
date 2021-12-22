@@ -9,15 +9,16 @@ import java.util.Scanner;
 
 public class FFSync {
 
-    public static boolean isReachable(String[] args) throws IOException {
-        for (int i=1;i<args.length;i++){ //Verificação de conexão
-            try {
-                InetAddress inet=InetAddress.getByName(args[i]);
-                if(!inet.isReachable(500)){
-                    System.out.println("The following ip address is unreachable:" + args[i]);
-                    return false;
-                }
-            } catch (IOException ioe) {return false;}
+    public static boolean isReachable(String endereco){
+        try {
+            InetAddress inet=InetAddress.getByName(endereco);
+            if(!inet.isReachable(500)){
+                System.out.println("O endereço é unreachable");
+                return false;
+            }
+        } catch (IOException ioe) {
+            System.out.println("Endereco nao é valido");
+            return false;
         }
         return true;
     }
@@ -62,7 +63,6 @@ public class FFSync {
                     DatagramPacket recebido = new DatagramPacket(bytesRecebidos, bytesRecebidos.length, address, port);
                     socket.receive(recebido);
                     String teste = new String(retiraZeros(bytesRecebidos));
-                    System.out.println("Teste:" + teste + " | Password:" + password);
                     if (password.equals(new String(retiraZeros(bytesRecebidos)))) {
                         socket.send(enviado); //Enviar extras para confirmar que o parceiro recebe
                         socket.send(enviado); //Enviar extras para confirmar que o parceiro recebe
@@ -98,7 +98,9 @@ public class FFSync {
 
     public static void main(String[] args) throws IOException {
 
-        if(!isReachable(args)) return;
+        if(!isReachable(args[1])) {
+            return;
+        }
 
         if(args.length!=2){
             System.out.println("Formato errado, tente : FFSync pasta1 10.1.1.1");
@@ -133,6 +135,7 @@ public class FFSync {
             servidorTCP.join();
             clienteTCP.join();
             logs.finish();
+            System.out.println("FFSync terminado");
         }
         catch (SocketException | InterruptedException e) {
             System.out.println("Porta em uso, tente novamente mais tarde");

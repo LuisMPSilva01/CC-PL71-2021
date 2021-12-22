@@ -86,7 +86,6 @@ public class Server extends Thread {
         int repetitions=5;
         do {
             sendPacket(files, address, port);
-            System.out.println("yo");
             repetitions--;
         } while (waitACK()!=block||repetitions==0);
     }
@@ -128,14 +127,12 @@ public class Server extends Thread {
             this.socket.setSoTimeout(2000); // Sendo o RRQFolder pode ser a ultima operação depois do FIN, este timeout vai fazer com que o servidor feche caso o fin se perca
         } else{
             if ((udpPacket=new RRQFile(array)).isOK()){
-                System.out.println("Packet recieved RRQFile");
                 RRQFile pacote =new RRQFile(array);
                 Thread ds = new Thread(new FT_Rapid_Sender(pacote,address,port,logs,showPL,packetLogs));
                 ds.start();
                 threads.add(ds);
             } else {
                 if ((udpPacket=new FIN(array)).isOK()){
-                    System.out.println("Packet recieved FIN");
                     running=false;
                 } else {
                     if(showPL) packetLogs.received(" Ignored packet");
@@ -168,6 +165,7 @@ public class Server extends Thread {
             }
             packetLogs.close();
             socket.close();
+            System.out.println("Server closed");
         } catch (IOException e) {
             e.printStackTrace();
         }

@@ -265,5 +265,6 @@ public class Client extends Thread{
             ioe.printStackTrace();
         }
         this.socket.close();
+        System.out.println("Client closed");
     }
 }
