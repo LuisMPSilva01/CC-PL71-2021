@@ -96,81 +96,44 @@ public class FFSync {
 
     public static void main(String[] args) throws IOException {
 
-        //if(!isReachable(args)) return;
+        if(!isReachable(args)) return;
 
-        //if(args.length!=2){
-        //    System.out.println("Formato errado, tente : FFSync pasta1 10.1.1.1");
-        //    return;
-        //}
-        //if(!Files.exists(Path.of(args[0]))) {
-        //    System.out.println("Ficheiro não existe");
-        //    return;
-        //}
+        if(args.length!=2){
+            System.out.println("Formato errado, tente : FFSync pasta1 10.1.1.1");
+            return;
+        }
+        if(!Files.exists(Path.of(args[0]))) {
+            System.out.println("Pasta não existe");
+            return;
+        }
 
 
         int defaultPort=8888;
-        int SO =0; //SO==0 LINUX || ELSE WINDOWS
         boolean showPL = showPacketLogs();
         try {
-
             LogsMaker logs;
-            if(args.length==2) { //Cenario normal
-                DatagramSocket socket = new DatagramSocket(defaultPort);
-                verificaPassword(socket,InetAddress.getByName(args[1]),defaultPort);
-                logs = new LogsMaker(args[0],args[1]);
-                Thread servidor = new Thread(new Server(socket,new File(args[0]),logs,showPL));
-                servidor.start();
+            DatagramSocket socket = new DatagramSocket(defaultPort);
+            verificaPassword(socket,InetAddress.getByName(args[1]),defaultPort);
+            logs = new LogsMaker(args[0],args[1]);
+            Thread servidor = new Thread(new Server(socket,new File(args[0]),logs,showPL));
+            servidor.start();
 
-                Thread servidorTCP = new Thread(new TCPServer());
-                servidorTCP.start();
+            Thread servidorTCP = new Thread(new TCPServer());
+            servidorTCP.start();
 
-                Thread cliente = new Thread(new Client(defaultPort, InetAddress.getByName(args[1]),new File(args[0]),logs,showPL));
-                cliente.start();
+            Thread cliente = new Thread(new Client(defaultPort, InetAddress.getByName(args[1]),new File(args[0]),logs,showPL));
+            cliente.start();
 
-                servidor.join();
-                cliente.join();
-                Thread clienteTCP = new Thread(new TCPClient(InetAddress.getByName(args[1])));
-                clienteTCP.start();
-                servidorTCP.join();
-                clienteTCP.join();
-            } else { //Cenario de teste
-                Thread servidorTCP = new Thread(new TCPServer());
-                servidorTCP.start();
-                servidorTCP.join();
-                File folder1,folder2;
-                if (SO==0){
-                    folder1 = new File("/home/ray/Downloads/teste3");
-                    folder2 = new File("/home/ray/Downloads/teste2");
-                }else {
-                    folder1 = new File("C:\\Users\\Acer\\Desktop\\teste1");
-                    folder2 = new File("C:\\Users\\Acer\\Desktop\\teste2");
-                }
-
-                DatagramSocket socket1 = new DatagramSocket(defaultPort);
-                logs = new LogsMaker(args[0],args[1]);
-                Thread servidor1 = new Thread(new Server(socket1,folder1,logs,showPL));
-                servidor1.start();
-
-
-                Thread cliente1 = new Thread(new Client(8889, InetAddress.getByName("localhost"),folder1,logs,showPL)); //change
-                cliente1.start();
-                ////////////////////////////////////
-                DatagramSocket socket2 = new DatagramSocket(8889);
-                Thread servidor2 = new Thread(new Server(socket2,folder2,logs,showPL));
-                servidor2.start();
-
-                Thread cliente2 = new Thread(new Client(defaultPort, InetAddress.getByName("localhost"),folder2,logs,showPL)); //change
-                cliente2.start();
-
-                servidor1.join();
-                cliente1.join();
-                servidor2.join();
-                cliente2.join();
-            }
+            servidor.join();
+            cliente.join();
+            Thread clienteTCP = new Thread(new TCPClient(InetAddress.getByName(args[1])));
+            clienteTCP.start();
+            servidorTCP.join();
+            clienteTCP.join();
             logs.finish();
-
-        } catch (SocketException | InterruptedException e) {
-        System.out.println("Porta em uso, tente novamente mais tarde");
+        }
+        catch (SocketException | InterruptedException e) {
+            System.out.println("Porta em uso, tente novamente mais tarde");
         }
     }
 }

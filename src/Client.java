@@ -13,7 +13,6 @@ public class Client extends Thread{
     private final int defaultPort;
     private String serverFolder;
     private File folder;
-    private final int SO=0; //Linux -> 0 | Windows -> everything else
     private LogsMaker logs;
     private boolean showPL;
     private PacketLogs packetLogs;
@@ -109,7 +108,6 @@ public class Client extends Thread{
                 r = true;
                 break;
             }
-
         }
         return r;
     }
@@ -146,8 +144,6 @@ public class Client extends Thread{
 
     public void createSubfolders(Map<String, LongTuple> missing){
         for (Map.Entry<String, LongTuple> entry : missing.entrySet()) {
-            System.out.println("file: " + entry.getKey() + " | subfolder: " + isInSubfolder(entry.getKey()));
-
             String file = entry.getKey();
             String sf = "";
             while (isInSubfolder(file)) {
@@ -156,8 +152,6 @@ public class Client extends Thread{
                 else
                     sf += "/" + getSubfolder(file);
                 File subfolder = new File(this.folder.getAbsolutePath() + "/" + sf);
-                System.out.println("subfolder: " + subfolder.getAbsolutePath() + " | exists: " + subfolder.exists());
-                System.out.println("without folder: " + removeSubfolder(file) + "\n");
                 if (!subfolder.exists()) {
                     subfolder.mkdirs();
                 }
@@ -174,25 +168,13 @@ public class Client extends Thread{
         createSubfolders(missing);
         Thread[] missingFiles = new Thread[missing.size()];
         int i=0;
-        System.out.println("size: " + missing.size());
-        if(SO==0){
-            for(Map.Entry<String, LongTuple> entry: missing.entrySet()){
-                String fileName = serverFolder + "/" + entry.getKey();
-                String newFileName = myFolder.getAbsolutePath() + "/" + entry.getKey();
-                System.out.println("new Filename: " + newFileName);
-                System.out.println("Filename: " + fileName);
-                missingFiles[i] = new Thread(new FT_Rapid_Receiver(address, defaultPort, fileName, newFileName,logs,showPL,packetLogs));
-                missingFiles[i].start();
-                i++;
-            }
-        } else {
-            for(Map.Entry<String, LongTuple> entry: missing.entrySet()){
-                String fileName = serverFolder + "\\" + entry.getKey();
-                String newFileName = myFolder.getAbsolutePath() + "\\" + entry.getKey();
-                missingFiles[i] = new Thread(new FT_Rapid_Receiver(address, defaultPort, fileName, newFileName,logs,showPL,packetLogs));
-                missingFiles[i].start();
-                i++;
-            }
+        for(Map.Entry<String, LongTuple> entry: missing.entrySet()){
+            String fileName = serverFolder + "/" + entry.getKey();
+            String newFileName = myFolder.getAbsolutePath() + "/" + entry.getKey();
+            System.out.println("new Filename: " + newFileName);
+            missingFiles[i] = new Thread(new FT_Rapid_Receiver(address, defaultPort, fileName, newFileName,logs,showPL,packetLogs));
+            missingFiles[i].start();
+            i++;
         }
 
         for(int j=0;j<i;j++){
@@ -206,7 +188,6 @@ public class Client extends Thread{
         List<FILES> lista = new ArrayList<>();
         int nBloco=-1; //Numero
         boolean sendACK = true;
-        System.out.println(nrBlocos);
         while (true){ //Ciclo para esperar o pacote do FILES
             if(sendACK){  //Caso na iteração anterior tenha recebido o pacote errado, não vai enviar ack
                 sendPacket(new ACK(nBloco)); //Enviar o ack para desbloquear o FILES
