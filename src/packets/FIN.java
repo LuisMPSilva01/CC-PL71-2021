@@ -15,6 +15,11 @@ public class FIN implements UDP_Packet{
         byte[] hashcode = ByteBuffer.allocate(4).putInt(Arrays.hashCode(Arrays.copyOfRange(bytes, 4,1200))).array();
         System.arraycopy(hashcode, 0, bytes, 0, 4); //Copiar o número do bloco
     }
+    public int getHashCode(){
+        byte[] tmp = new byte[4];
+        System.arraycopy(this.bytes, 0, tmp, 0, 4);
+        return ByteBuffer.wrap(tmp).getInt();
+    }
     @Override
     public byte[] getContent(){
         return bytes.clone();
@@ -22,7 +27,8 @@ public class FIN implements UDP_Packet{
 
     @Override
     public boolean isOK() {
-        return 7==bytes[4];
+        return 7==bytes[4]
+                && getHashCode() == Arrays.hashCode(Arrays.copyOfRange(bytes, 4,1200));
     }
 
     @Override

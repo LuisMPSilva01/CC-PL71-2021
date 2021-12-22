@@ -63,8 +63,8 @@ public class LogsMaker {
             logs.write(("INFO: FFSync "+ filename +" " +  peer + "\n" +
                     "Date: "+ DFormat.format(startTime.getTime()) +"\n"+
                     "Time taken: " + (timeTaken) + " miliseconds\n" +
-                    "Tamanho inicial da pasta: " + (startSize) + "bytes\n" +
-                    "Tamanho final da pasta: " + (endSize) + "bytes\n" +
+                    "Tamanho inicial da pasta: " + (startSize) + " bytes\n" +
+                    "Tamanho final da pasta: " + (endSize) + " bytes\n" +
                     "Data transferida: " + dataTransferida + " bytes\n" +
                     "Bitrate: " + ((float)dataTransferida/timeTaken*1000*8) + " bits/segundo\n" + //Como conseguir o débito real?
                     "Ficheiros enviados:\n"+

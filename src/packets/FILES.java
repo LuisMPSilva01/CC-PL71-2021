@@ -68,7 +68,8 @@ public class FILES implements UDP_Packet{
 
     @Override
     public boolean isOK() {
-        return 6==bytes[4];
+        return 6==bytes[4]
+                && getHashCode() == Arrays.hashCode(Arrays.copyOfRange(bytes, 4,1200));
     }
 
     @Override
