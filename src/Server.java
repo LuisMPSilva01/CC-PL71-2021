@@ -87,7 +87,7 @@ public class Server extends Thread {
         do {
             sendPacket(files, address, port);
             repetitions--;
-        } while (waitACK()!=block||repetitions==0);
+        } while (waitACK()!=block&&repetitions!=0);
     }
 
     public Map<String, LongTuple> sendFolderName(InetAddress address, int port) throws IOException {
