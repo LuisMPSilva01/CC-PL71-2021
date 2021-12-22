@@ -10,9 +10,9 @@ public class Server extends Thread {
     boolean running = true;
     private final File folder;
     private final List<Thread> threads = new ArrayList<>();
-    private int sizeBlock = 1200;
-    private LogsMaker logs;
-    private boolean showPL;
+    private final int sizeBlock = 1200;
+    private final LogsMaker logs;
+    private final boolean showPL;
     private PacketLogs packetLogs;
 
 

@@ -11,8 +11,8 @@ class FT_Rapid_Receiver implements Runnable {
     private InetAddress address;
     private final String fileName;
     private final String newFileName;
-    private LogsMaker logs;
-    private boolean showPL;
+    private final LogsMaker logs;
+    private final boolean showPL;
     private PacketLogs packetLogs;
 
     public FT_Rapid_Receiver(InetAddress address, int serverPort, String fileName, String newFileName, LogsMaker logs, boolean showPL, PacketLogs packetLogs) throws SocketException{
@@ -83,7 +83,7 @@ class FT_Rapid_Receiver implements Runnable {
 
         File f = new File(newFileName);
         f.delete();
-        f.createNewFile(); //Unhandled
+        f.createNewFile();
         FileOutputStream output = new FileOutputStream(f, true);
 
         while (true) {

@@ -9,15 +9,15 @@ import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class LogsMaker {
-    private FileOutputStream logs;
-    private ReentrantLock lock= new ReentrantLock();
-    private long startSize;
-    private Date startTime;
-    private String filename;
-    private String peer;
+    private final FileOutputStream logs;
+    private final ReentrantLock lock= new ReentrantLock();
+    private final long startSize;
+    private final Date startTime;
+    private final String filename;
+    private final String peer;
     private final DateFormat DFormat=  DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG, Locale.getDefault()); //Date format
-    private List<String> enviados= new ArrayList<>();
-    private List<String> recebidos= new ArrayList<>();
+    private final List<String> enviados= new ArrayList<>();
+    private final List<String> recebidos= new ArrayList<>();
 
     public LogsMaker(String filename, String peer) throws IOException {
         this.filename=filename;

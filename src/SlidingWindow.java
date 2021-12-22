@@ -7,7 +7,7 @@ import java.util.PriorityQueue;
 import java.util.Queue;
 
 public class SlidingWindow {
-    private Queue<DataPlusBlock> window;
+    private final Queue<DataPlusBlock> window;
     private int last;
     private final int maxSize;
     private final int windowSize;
