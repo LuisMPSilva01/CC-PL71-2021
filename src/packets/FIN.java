@@ -13,7 +13,7 @@ public class FIN implements UDP_Packet{
         bytes[4]=7;
 
         byte[] hashcode = ByteBuffer.allocate(4).putInt(Arrays.hashCode(Arrays.copyOfRange(bytes, 4,1200))).array();
-        System.arraycopy(hashcode, 0, bytes, 0, 4); //Copiar o número do bloco
+        System.arraycopy(hashcode, 0, bytes, 0, 4);//Gerar hashcode
     }
     public int getHashCode(){
         byte[] tmp = new byte[4];

@@ -13,10 +13,10 @@ public class WRQFile implements UDP_Packet{
         bytes[4] = 3;
 
         byte[] blocos = ByteBuffer.allocate(4).putInt(nblocks).array();
-        System.arraycopy(blocos, 0, bytes, 5, blocos.length);
+        System.arraycopy(blocos, 0, bytes, 5, blocos.length); //Numero de blocos de DATA
 
         byte[] hashcode = ByteBuffer.allocate(4).putInt(Arrays.hashCode(Arrays.copyOfRange(bytes, 4,1200))).array();
-        System.arraycopy(hashcode, 0, bytes, 0, 4); //Copiar o número do bloco
+        System.arraycopy(hashcode, 0, bytes, 0, 4); //Gerar hashcode
     }
 
     public int getNBlocos() {

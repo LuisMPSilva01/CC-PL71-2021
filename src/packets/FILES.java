@@ -25,18 +25,18 @@ public class FILES implements UDP_Packet{
             byte[] filesize = longToBytes(lt.getA());
             byte[] lastModifiedDate = longToBytes(lt.getB());
 
-            System.arraycopy(size_filename, 0, bytes, pos, 4);
+            System.arraycopy(size_filename, 0, bytes, pos, 4); //Tamanho do nome
             pos += 4;
-            System.arraycopy(filename, 0, bytes, pos, filename.length);
+            System.arraycopy(filename, 0, bytes, pos, filename.length); //Nome do ficheiro
             pos += filename.length;
-            System.arraycopy(filesize, 0, bytes, pos, 8);
+            System.arraycopy(filesize, 0, bytes, pos, 8); //Tamanho do ficheiro
             pos += 8;
-            System.arraycopy(lastModifiedDate, 0, bytes, pos, 8);
+            System.arraycopy(lastModifiedDate, 0, bytes, pos, 8); //Data de alteracao
             pos += 8;
         }
         bytes[pos] = -1;
         byte[] hashcode = ByteBuffer.allocate(4).putInt(Arrays.hashCode(Arrays.copyOfRange(bytes, 4,1200))).array();
-        System.arraycopy(hashcode, 0, bytes, 0, 4); //Copiar o número do bloco
+        System.arraycopy(hashcode, 0, bytes, 0, 4); //Gerar hashcode
     }
 
     public int getHashCode(){

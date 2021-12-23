@@ -15,16 +15,16 @@ public class FolderName implements UDP_Packet {
         this.bytes[4] = 8;
 
         byte[] blocos = ByteBuffer.allocate(4).putInt(nFilesBlocks).array();
-        System.arraycopy(blocos, 0, bytes, 5, blocos.length);
+        System.arraycopy(blocos, 0, bytes, 5, blocos.length); //Numero de blocos FILES
 
         byte[] tamanho = ByteBuffer.allocate(4).putInt(folder.length()).array();
-        System.arraycopy(tamanho, 0, bytes, 9, tamanho.length);
+        System.arraycopy(tamanho, 0, bytes, 9, tamanho.length); //Tamanho do nome do folder
 
         byte[] nome = folder.getBytes(StandardCharsets.UTF_8);
-        System.arraycopy(nome, 0, this.bytes, 13, nome.length);
+        System.arraycopy(nome, 0, this.bytes, 13, nome.length); //Nome do folder
 
         byte[] hashcode = ByteBuffer.allocate(4).putInt(Arrays.hashCode(Arrays.copyOfRange(bytes, 4,1200))).array();
-        System.arraycopy(hashcode, 0, bytes, 0, 4); //Copiar o número do bloco
+        System.arraycopy(hashcode, 0, bytes, 0, 4); //Gerar hashcode
     }
     public int getFilesBlocks() {
         byte[] tmp = new byte[4];

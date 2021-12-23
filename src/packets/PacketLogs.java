@@ -11,7 +11,7 @@ public class PacketLogs {
 
     public PacketLogs(String name) throws IOException {
         File f = new File(name);
-        f.delete();
+        f.delete(); //Cria novo ficheiro de logs
         f.createNewFile();
         this.packetLogs = new FileOutputStream(name, true);
     }

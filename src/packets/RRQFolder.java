@@ -14,7 +14,7 @@ public class RRQFolder implements UDP_Packet {
         this.bytes[4] = 1;
 
         byte[] hashcode = ByteBuffer.allocate(4).putInt(Arrays.hashCode(Arrays.copyOfRange(bytes, 4,1200))).array();
-        System.arraycopy(hashcode, 0, bytes, 0, 4); //Copiar o número do bloco
+        System.arraycopy(hashcode, 0, bytes, 0, 4); //Gerar hashcode
     }
 
     public int getHashCode(){

@@ -12,11 +12,11 @@ public class DATA implements UDP_Packet{
         byte[] blocos = ByteBuffer.allocate(4).putInt(nBloco).array();
         System.arraycopy(blocos, 0, bytes, 5, 4); //Copiar o número do bloco
         byte[] size = ByteBuffer.allocate(4).putInt(data.length).array();
-        System.arraycopy(size, 0, bytes, 9, 4);
+        System.arraycopy(size, 0, bytes, 9, 4); //Tamanho da data
         System.arraycopy(data, 0, bytes, 13, data.length); //Copiar a data
 
         byte[] hashcode = ByteBuffer.allocate(4).putInt(Arrays.hashCode(Arrays.copyOfRange(bytes, 4,1 + 4 + 4 + 4+data.length))).array();
-        System.arraycopy(hashcode, 0, bytes, 0, 4); //Copiar o número do bloco
+        System.arraycopy(hashcode, 0, bytes, 0, 4); //Gerar hashcode
     }
 
     public DATA(byte[] bytes) {

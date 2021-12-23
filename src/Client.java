@@ -163,6 +163,8 @@ public class Client extends Thread{
     }
 
     public void getFilesHandler(List<FILES> list, File myFolder) throws IOException, InterruptedException {
+        long availableSpace = folder.getUsableSpace(); //Calcula o tamanho disponivel inicial
+
         Map<String, LongTuple> mine = new HashMap<>();
         getFilesInFolder(mine, myFolder, "");
         Map<String, LongTuple> other = decodeFILES(list);
@@ -171,12 +173,16 @@ public class Client extends Thread{
         Thread[] missingFiles = new Thread[missing.size()];
         int i=0;
         for(Map.Entry<String, LongTuple> entry: missing.entrySet()){
-            String fileName = serverFolder + "/" + entry.getKey();
-            String newFileName = myFolder.getAbsolutePath() + "/" + entry.getKey();
-            System.out.println("new Filename: " + newFileName);
-            missingFiles[i] = new Thread(new FT_Rapid_Receiver(address, defaultPort, fileName, newFileName,logs,showPL,packetLogs));
-            missingFiles[i].start();
-            i++;
+            long espacoFicheiro = entry.getValue().getA();
+            if(availableSpace>espacoFicheiro) { //Verifica se há espaço disponível
+                availableSpace-=espacoFicheiro; //Retira o tamanho do ficheiro ao espaço disponivel
+                String fileName = serverFolder + "/" + entry.getKey();
+                String newFileName = myFolder.getAbsolutePath() + "/" + entry.getKey();
+                System.out.println("new Filename: " + newFileName);
+                missingFiles[i] = new Thread(new FT_Rapid_Receiver(address, defaultPort, fileName, newFileName, logs, showPL, packetLogs));
+                missingFiles[i].start();
+                i++;
+            }
         }
 
         for(int j=0;j<i;j++){

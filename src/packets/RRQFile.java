@@ -13,14 +13,14 @@ public class RRQFile implements UDP_Packet{
         this.bytes= new byte[1200];
         bytes[4] = 2;
 
-        byte[] blocos = ByteBuffer.allocate(4).putInt(file.length()).array();
-        System.arraycopy(blocos, 0, bytes, 5, 4); //Copiar o número do bloco
+        byte[] tamanho = ByteBuffer.allocate(4).putInt(file.length()).array();
+        System.arraycopy(tamanho, 0, bytes, 5, 4); //tamanho do nome do ficheiro
 
         byte[] fArray = file.getBytes(StandardCharsets.UTF_8);
-        System.arraycopy(fArray, 0, bytes, 9, fArray.length);
+        System.arraycopy(fArray, 0, bytes, 9, fArray.length); //Nome do ficheiro
 
         byte[] hashcode = ByteBuffer.allocate(4).putInt(Arrays.hashCode(Arrays.copyOfRange(bytes, 4,1200))).array();
-        System.arraycopy(hashcode, 0, bytes, 0, 4); //Copiar o número do bloco
+        System.arraycopy(hashcode, 0, bytes, 0, 4); //Gerar hashcode
     }
     public int getStringSize() {
         byte[] tmp = new byte[4];

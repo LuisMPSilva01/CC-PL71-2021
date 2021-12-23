@@ -14,7 +14,7 @@ public class ACK implements UDP_Packet{
         System.arraycopy(blocos, 0, bytes, 5, 4); //Copiar o número do bloco
 
         byte[] hashcode = ByteBuffer.allocate(4).putInt(Arrays.hashCode(Arrays.copyOfRange(bytes, 4,1200))).array();
-        System.arraycopy(hashcode, 0, bytes, 0, 4); //Copiar o número do bloco
+        System.arraycopy(hashcode, 0, bytes, 0, 4); //Escrever hashCode
     }
     public ACK(byte[] bytes) {
         this.bytes = bytes.clone();
