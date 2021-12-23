@@ -172,6 +172,7 @@ public class Client extends Thread{
         createSubfolders(missing);
         Thread[] missingFiles = new Thread[missing.size()];
         int i=0;
+
         for(Map.Entry<String, LongTuple> entry: missing.entrySet()){
             long espacoFicheiro = entry.getValue().getA();
             if(availableSpace>espacoFicheiro) { //Verifica se há espaço disponível
@@ -182,6 +183,8 @@ public class Client extends Thread{
                 missingFiles[i] = new Thread(new FT_Rapid_Receiver(address, defaultPort, fileName, newFileName, logs, showPL, packetLogs));
                 missingFiles[i].start();
                 i++;
+            } else {
+                logs.noSpace(entry.getKey());
             }
         }
 

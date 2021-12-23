@@ -1,5 +1,6 @@
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.DateFormat;
@@ -17,6 +18,7 @@ public class LogsMaker {
     private final String filename;
     private final String peer;
     private final DateFormat DFormat=  DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG, Locale.getDefault()); //Date format
+    private final List<String> semEspaco= new ArrayList<>();
     private final List<String> enviados= new ArrayList<>();
     private final List<String> recebidos= new ArrayList<>();
 
@@ -35,6 +37,14 @@ public class LogsMaker {
         this.lock.lock();
         try {
             recebidos.add(filename);
+        } finally {
+            this.lock.unlock();
+        }
+    }
+    public void noSpace(String filename){
+        this.lock.lock();
+        try {
+            semEspaco.add(filename);
         } finally {
             this.lock.unlock();
         }
@@ -70,8 +80,11 @@ public class LogsMaker {
                     "Ficheiros enviados:\n"+
                     enviados + "\n"+
                     "Ficheiros recebidos:\n"+
-                    recebidos+ "\n" +
-                    "-----------------------------------------------------\n").getBytes());
+                    recebidos+ "\n").getBytes());
+            if(semEspaco.size()>0){
+                logs.write(("Sem espaco para os seguintes ficheiros\n:"+ semEspaco + "\n").getBytes(StandardCharsets.UTF_8));
+            }
+            logs.write("-----------------------------------------------------\n".getBytes(StandardCharsets.UTF_8));
             logs.close();
         } finally {
             this.lock.unlock();
