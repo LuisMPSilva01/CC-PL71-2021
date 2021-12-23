@@ -10,4 +10,5 @@ Authors:
 
 ---
 
-Para correr o codigo será necessário fazer "java -jar FFSync.jar pasta endereço"
+Para correr o codigo será necessário fazer "java -jar FFSync.jar pasta endereço".
+O dispositivo tem que ser capaz de abrir um socket na porta 80

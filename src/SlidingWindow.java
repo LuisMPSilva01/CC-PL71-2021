@@ -5,17 +5,17 @@ import java.util.LinkedList;
 import java.util.Queue;
 
 public class SlidingWindow {
-    private final Queue<DataPlusBlock> window;
-    private int last;
-    private final int maxSize;
-    private final int windowSize;
-    private final FileInputStream fis;
-    private final int BlockSize;
-    private final long filesize;
+    private final Queue<DataPlusBlock> window; //Queue de blcoos de data
+    private int last; //Ultimo bloco de data da window
+    private final int maxSize; //Tamanho maximos de blocos
+    private final int windowSize; //Tamanho maximo da window
+    private final FileInputStream fis; //Usado para ler o ficheiro
+    private final int BlockSize; //Tamanho dos blocos de data
+    private final long filesize; //Tamanho do ficheiro
 
     public SlidingWindow(int defaultWindowSize, int maxSize, String filename, int BlockSize) throws IOException {
         this.maxSize=maxSize;
-        this.windowSize = Math.min(maxSize,defaultWindowSize);
+        this.windowSize = Math.min(maxSize,defaultWindowSize); //Caso o maxSize seja maior que o tamanho default então o tamanho da window vai ser o maxSize
         File f = new File(filename);
         fis = new FileInputStream(f);
         this.BlockSize = BlockSize;
@@ -23,7 +23,7 @@ public class SlidingWindow {
 
         window = new LinkedList<>();
         for (last=0;last<windowSize;last++){
-            window.offer(new DataPlusBlock(getNextBlock(),last));
+            window.offer(new DataPlusBlock(getNextBlock(),last)); //Adicionar todos os blocos de data para a queue
         }
     }
 
@@ -31,17 +31,16 @@ public class SlidingWindow {
         return windowSize;
     }
 
-    public DataPlusBlock getNext(){
+    public DataPlusBlock getNext(){ //Retira o proximo elemento da queue e ensere-o no fim da queue de novo
         DataPlusBlock next = window.remove();
         window.offer(next);
         return next;
     }
 
 
-    public Queue<DataPlusBlock> update(int recieved) throws IOException {
-        Queue<DataPlusBlock> sendQueue = new LinkedList<>();
-        if(!containsBlock(recieved)){
-            sendQueue.add(new DataPlusBlock(new byte[1],-1));
+    public Queue<DataPlusBlock> update(int recieved) throws IOException { //Analisa os acks recebido (MUITO IMPORTANTE)
+        Queue<DataPlusBlock> sendQueue = new LinkedList<>(); //Cria queue de pedidos que o Sender vai enviar para o Cliente
+        if(!containsBlock(recieved)){ //Se o ack não está na queue então é repetido
             return sendQueue;
         }
         while (true) {

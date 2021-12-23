@@ -260,6 +260,7 @@ public class Client extends Thread{
             getFilesHandler(files, folder); //Vai fazer RRQFile com os ficheiros em falta
 
             sendPacket(new FIN()); //Envia pacote a terminar a conexão
+            if(showPL) packetLogs.close(); //Fecha o leitor de escrita do packetLogs
         }
         catch(IOException | InterruptedException ioe){
             ioe.printStackTrace();

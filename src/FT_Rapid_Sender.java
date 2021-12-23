@@ -92,10 +92,7 @@ class FT_Rapid_Sender implements Runnable {
         Queue<DataPlusBlock> sendQueue = new LinkedList<>();
         while (!windoh.isEmpty()) {  //Repetições vai ser usado na ultima iteração para quebrar o ciclo caso não receba o ultimo ack(pode ter sido perdido)
             while (!sendQueue.isEmpty()) { //Envia todos os pacotes na queue
-                DataPlusBlock nextValue = sendQueue.remove();
-                if (nextValue.getBlock()!=-1){
-                    sendDataBlock(nextValue, address, port);
-                }
+                sendDataBlock(sendQueue.remove(), address, port);
             }
 
             try {

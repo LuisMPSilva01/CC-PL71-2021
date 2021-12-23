@@ -96,11 +96,6 @@ public class FFSync {
     }
 
     public static void main(String[] args) throws IOException {
-
-        if(!isReachable(args[1])) {
-            return;
-        }
-
         if(args.length!=2){
             System.out.println("Formato errado, tente : FFSync pasta1 10.1.1.1");
             return;
@@ -109,7 +104,9 @@ public class FFSync {
             System.out.println("Pasta não existe");
             return;
         }
-
+        if(!isReachable(args[1])) {
+            return;
+        }
 
         int defaultPort=80;
         boolean showPL = showPacketLogs();
