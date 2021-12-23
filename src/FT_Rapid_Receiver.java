@@ -29,14 +29,14 @@ class FT_Rapid_Receiver implements Runnable {
         if(showPL) this.packetLogs=packetLogs;
     }
 
-    public void sendPacket(UDP_Packet p) throws IOException {
+    public void sendPacket(UDP_Packet p) throws IOException { //Envia pacote
         byte[] buf = p.getContent();
         DatagramPacket packet = new DatagramPacket(buf,buf.length, address, port);
         socket.send(packet);
         if(showPL) this.packetLogs.sent(p.toLogInput());
     }
 
-    public int sendRRQ() throws IOException {
+    public int sendRRQ() throws IOException { //Envia RRQFile
         WRQFile pacote;
         do {
             sendPacket(new RRQFile(fileName));
@@ -44,7 +44,7 @@ class FT_Rapid_Receiver implements Runnable {
         return pacote.getNBlocos();
     }
 
-    public WRQFile getWRQ() throws IOException {
+    public WRQFile getWRQ() throws IOException { //Espera pelo WRQFile
         byte[] buf = new byte[1200];
         DatagramPacket packet = new DatagramPacket(buf, buf.length);
 
@@ -52,7 +52,7 @@ class FT_Rapid_Receiver implements Runnable {
             socket.setSoTimeout(300);
             socket.receive(packet);
             WRQFile pacote = new WRQFile(buf);
-            if(pacote.isOK()){
+            if(pacote.isOK()){ //Verifica integridade
                 if(showPL) this.packetLogs.received(pacote.toLogInput());
                 this.address = packet.getAddress();
                 this.port = packet.getPort();
@@ -69,30 +69,30 @@ class FT_Rapid_Receiver implements Runnable {
         }
     }
 
-    public boolean containsBlock(Queue<DataPlusBlock> queue, int nBloco){
+    public boolean containsBlock(Queue<DataPlusBlock> queue, int nBloco){ //Verifica se o nBloco está contido na queue
         for(DataPlusBlock dpb : queue){
             if (dpb.getBlock()==nBloco) return true;
         }
         return false;
     }
 
-    public void writeFile(int nrblocks) throws IOException{
-        boolean sendFirst = true;
+    public void writeFile(int nrblocks) throws IOException{ //Recebe pacotes de DATA e guarda ficheiro
+        boolean sendFirst = true; //Envia confirmação do WRQFile se tiver a true e fica a falso quando receber DATA
         socket.setSoTimeout(50);
 
-        sendPacket(new ACK(-1));
-        Queue<DataPlusBlock> waitingToWrite = new PriorityQueue<>();
+        sendPacket(new ACK(-1)); //Confirma o pacote WRQFile
+        Queue<DataPlusBlock> waitingToWrite = new PriorityQueue<>(); //Queue de blocos de data
         int next=0;
 
         File f = new File(newFileName);
-        f.delete();
+        f.delete(); //Apaga ficheiro se já existir
         f.createNewFile();
         FileOutputStream output = new FileOutputStream(f, true);
 
         while (true) {
             try {
                 while (!(waitingToWrite.isEmpty()) && (waitingToWrite.element().getBlock()== next) ){
-                    output.write(waitingToWrite.remove().getData());
+                    output.write(waitingToWrite.remove().getData());  //Escreve bloco de data se a cabeça for o proximo numero de bloco
                     output.flush();
                     next++;
                 }
@@ -108,7 +108,7 @@ class FT_Rapid_Receiver implements Runnable {
                     int blocoPacote = pacote.getNBloco();
                     sendFirst=false;
                     sendPacket(new ACK(blocoPacote));
-                    if (blocoPacote>=next&&!containsBlock(waitingToWrite,blocoPacote)) {
+                    if (blocoPacote>=next&&!containsBlock(waitingToWrite,blocoPacote)) { //Guarda data se não estiver na queue e tiver um identificador superior ao next
                         waitingToWrite.add(new DataPlusBlock(pacote.getConteudo(),blocoPacote));
                     }
                 } else if(showPL) this.packetLogs.received("Bad DATABLOCK");

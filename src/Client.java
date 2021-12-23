@@ -23,7 +23,7 @@ public class Client extends Thread{
 
     public Client(int defaultPort, InetAddress address, File folder, LogsMaker logs, boolean showPL) throws IOException {
         this.socket = new DatagramSocket();
-        this.socket.setSoTimeout(100);        //TIMEOUT
+        this.socket.setSoTimeout(100);
         this.address = address;
         this.defaultPort=defaultPort;
         this.folder=folder;
@@ -32,14 +32,15 @@ public class Client extends Thread{
         if(showPL) this.packetLogs= new PacketLogs("Cliente_packets.txt");
     }
 
-    public void sendPacket(UDP_Packet p) throws IOException {
+
+    public void sendPacket(UDP_Packet p) throws IOException { //Envia o pacote fornecido para o servidor
         byte[] buf = p.getContent();
         DatagramPacket packet = new DatagramPacket(buf, buf.length, address, defaultPort);
         socket.send(packet);
         if(showPL) this.packetLogs.sent(p.toLogInput());
     }
 
-    Map<String, LongTuple> decodeFILES(List<FILES> list) {
+    Map<String, LongTuple> decodeFILES(List<FILES> list) { //Transforma uma lista de pacotes FILES num mapa onde é possivel aceder as informações de cada ficheiro
         Map<String, LongTuple> m = new HashMap<>();
 
         for (FILES f:list) {
@@ -183,11 +184,11 @@ public class Client extends Thread{
         }
     }
 
-    public List<FILES> waitFILES(int nrBlocos) throws IOException{
+    public List<FILES> waitFILES(int nrBlocos) throws IOException{ //Vai receber todos os pacotes de FILES
         byte[] buf = new byte[1200];
         DatagramPacket packet = new DatagramPacket(buf, buf.length);
         List<FILES> lista = new ArrayList<>();
-        int nBloco=-1; //Numero
+        int nBloco=-1; //Numero de bloco
         boolean sendACK = true;
         while (true){ //Ciclo para esperar o pacote do FILES
             if(sendACK){  //Caso na iteração anterior tenha recebido o pacote errado, não vai enviar ack
@@ -219,7 +220,7 @@ public class Client extends Thread{
         return lista;
     }
 
-    public int waitFolderName(RRQFolder rrqf) throws IOException {
+    public int waitFolderName(RRQFolder rrqf) throws IOException { //Espera pelo pacote FolderName
         byte[] buf = new byte[1200];
         DatagramPacket packet = new DatagramPacket(buf, buf.length);
         FolderName fn;
@@ -231,19 +232,18 @@ public class Client extends Thread{
                 if(showPL) this.packetLogs.timeOut("Foldername");
             }
             fn = new FolderName(buf);
-            if(showPL) this.packetLogs.received("bad foldername");
-        } while (!fn.isOK()); //Verificação do pacote
+        } while (!fn.isOK()); //Enquanto não receber o pacote correto vai repetir o precesso
 
         if(showPL) this.packetLogs.received(fn.toLogInput());
-        this.serverFolder = fn.getFolderName();
+        this.serverFolder = fn.getFolderName(); //Acede aos bytes do pacote para ter o seu nome
         return fn.getFilesBlocks();
     }
 
-    public List<FILES> waitFILESandName(RRQFolder rrqf){
+    public List<FILES> waitFILESandName(RRQFolder rrqf){ //Vai receber os pacotes de FILES e FolderName
         try {
             int nBlocos=waitFolderName(rrqf); //Guarda o nome do folder
 
-            return waitFILES(nBlocos);
+            return waitFILES(nBlocos); //Retorna a lista de pacotes FILES
         } catch (IOException ioe){
             return null;
         }
@@ -255,11 +255,11 @@ public class Client extends Thread{
 
         RRQFolder rrqf = new RRQFolder();
         try{
-            List<FILES> files=waitFILESandName(rrqf);
+            List<FILES> files=waitFILESandName(rrqf); //Recebe lista de Pacotes FILES
             
-            getFilesHandler(files, folder);
+            getFilesHandler(files, folder); //Vai fazer RRQFile com os ficheiros em falta
 
-            sendPacket(new FIN());
+            sendPacket(new FIN()); //Envia pacote a terminar a conexão
         }
         catch(IOException | InterruptedException ioe){
             ioe.printStackTrace();
